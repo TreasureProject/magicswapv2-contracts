@@ -1,0 +1,29 @@
+@startuml
+
+package "Vault" {
+  [NftVaultFactory] - DeployVault
+  DeployVault -> [NftVault]
+}
+
+node "DEX (UniswapV2)" {
+  [UniswapV2Factory] -- DeployPool
+  DeployPool --> [UniswapV2Pool]
+  [UniswapV2Router]
+}
+
+package "Router" {
+  [MagicSwapV2Router]
+}
+
+
+package "Rewards (Sushi)" {
+  [StakingContractMainnet]
+}
+
+[MagicSwapV2Router] --> [NftVault]
+[MagicSwapV2Router] --> [UniswapV2Pool]
+
+[MagicSwapV2Router] - [UniswapV2Router]
+[StakingContractMainnet] -> [UniswapV2Pool]
+
+@enduml
