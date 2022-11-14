@@ -1,8 +1,8 @@
-pragma solidity >=0.8.17;
+pragma solidity >=0.5.0;
 
-import '../../core/interfaces/IUniswapV2Pair.sol';
-import '../../core/interfaces/IUniswapV2Factory.sol';
-import '../../core/libraries/SafeMath.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+
+import "./SafeMath.sol";
 
 library UniswapV2Library {
     using SafeMath for uint;
@@ -17,13 +17,12 @@ library UniswapV2Library {
     // calculates the CREATE2 address for a pair without making any external calls
     function pairFor(address factory, address tokenA, address tokenB) internal pure returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
-        // TODO: test address => uint160 => uint
-        pair = address(uint160(uint(keccak256(abi.encodePacked(
+        pair = address(uint(keccak256(abi.encodePacked(
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
                 hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
-            )))));
+            ))));
     }
 
     // fetches and sorts the reserves for a pair
@@ -41,23 +40,21 @@ library UniswapV2Library {
     }
 
     // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut, address pair, address factory) internal view returns (uint amountOut) {
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) internal pure returns (uint amountOut) {
         require(amountIn > 0, 'UniswapV2Library: INSUFFICIENT_INPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'UniswapV2Library: INSUFFICIENT_LIQUIDITY');
-        uint totalFee = IUniswapV2Factory(factory).getTotalFee(pair);
-        uint amountInWithFee = amountIn.mul(10000 - totalFee);
+        uint amountInWithFee = amountIn.mul(997);
         uint numerator = amountInWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(10000).add(amountInWithFee);
+        uint denominator = reserveIn.mul(1000).add(amountInWithFee);
         amountOut = numerator / denominator;
     }
 
     // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
-    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut, address pair, address factory) internal view returns (uint amountIn) {
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) internal pure returns (uint amountIn) {
         require(amountOut > 0, 'UniswapV2Library: INSUFFICIENT_OUTPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'UniswapV2Library: INSUFFICIENT_LIQUIDITY');
-        uint totalFee = IUniswapV2Factory(factory).getTotalFee(pair);
-        uint numerator = reserveIn.mul(amountOut).mul(10000);
-        uint denominator = reserveOut.sub(amountOut).mul(10000 - totalFee);
+        uint numerator = reserveIn.mul(amountOut).mul(1000);
+        uint denominator = reserveOut.sub(amountOut).mul(997);
         amountIn = (numerator / denominator).add(1);
     }
 
@@ -68,7 +65,7 @@ library UniswapV2Library {
         amounts[0] = amountIn;
         for (uint i; i < path.length - 1; i++) {
             (uint reserveIn, uint reserveOut) = getReserves(factory, path[i], path[i + 1]);
-            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut, pairFor(factory, path[i], path[i + 1]), factory);
+            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
         }
     }
 
@@ -79,7 +76,7 @@ library UniswapV2Library {
         amounts[amounts.length - 1] = amountOut;
         for (uint i = path.length - 1; i > 0; i--) {
             (uint reserveIn, uint reserveOut) = getReserves(factory, path[i - 1], path[i]);
-            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, pairFor(factory, path[i], path[i + 1]), factory);
+            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut);
         }
     }
 }

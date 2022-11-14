@@ -1,8 +1,8 @@
-pragma solidity >=0.8.17;
+pragma solidity >=0.6.2;
 
 interface IUniswapV2Router01 {
-    function factory() external view returns (address);
-    function WETH() external view returns (address);
+    function factory() external pure returns (address);
+    function WETH() external pure returns (address);
 
     function addLiquidity(
         address tokenA,
@@ -88,8 +88,8 @@ interface IUniswapV2Router01 {
         returns (uint[] memory amounts);
 
     function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut, address pair) external view returns (uint amountOut);
-    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut, address pair) external view returns (uint amountIn);
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
     function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
     function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
 }
