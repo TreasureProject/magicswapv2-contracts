@@ -105,14 +105,6 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         } else if (_kLast != 0) {
             kLast = 0;
         }
-
-        balance0 = IERC20(_token0).balanceOf(address(this));
-        balance1 = IERC20(_token1).balanceOf(address(this));
-
-        /// @dev Make sure that either balance does not go below adjusted balance used for K calcualtions.
-        /// If balances after fee transfers are above or equal adjusted balances then K still holds.
-        require(balance0 >= balance0Adjusted / BASIS_POINTS, 'MagicswapV2: balance0Adjusted');
-        require(balance1 >= balance1Adjusted / BASIS_POINTS, 'MagicswapV2: balance1Adjusted');
     }
 
     // this low-level function should be called from a contract which performs important safety checks
