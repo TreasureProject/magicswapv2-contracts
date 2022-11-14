@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: CC-BY-4.0
-pragma solidity >=0.8.17;
+pragma solidity >=0.4.0;
 
 // taken from https://medium.com/coinmonks/math-in-solidity-part-3-percents-and-proportions-4db014e080b1
 // license is CC-BY-4.0
 library FullMath {
-    function inverse(uint256 x) internal pure returns (uint256) {
-        if (x == 0) return 0;
-
-        return type(uint256).max - x + 1;
-    }
-
     function fullMul(uint256 x, uint256 y) internal pure returns (uint256 l, uint256 h) {
-        uint256 mm = mulmod(x, y, type(uint256).max);
+        uint256 mm = mulmod(x, y, uint256(-1));
         l = x * y;
         h = mm - l;
         if (mm < l) h -= 1;
@@ -22,10 +16,10 @@ library FullMath {
         uint256 h,
         uint256 d
     ) private pure returns (uint256) {
-        uint256 pow2 = d & inverse(d);
+        uint256 pow2 = d & -d;
         d /= pow2;
         l /= pow2;
-        l += h * ((inverse(pow2)) / pow2 + 1);
+        l += h * ((-pow2) / pow2 + 1);
         uint256 r = 1;
         r *= 2 - d * r;
         r *= 2 - d * r;
