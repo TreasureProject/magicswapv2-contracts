@@ -6,9 +6,9 @@ import './interfaces/IUniswapV2Factory.sol';
 import './UniswapV2Pair.sol';
 
 contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
-    uint256 public constant MAX_ROYALTIES_FEE = 2000;
-    uint256 public constant MAX_PROTOCOL_FEE = 2000;
-    uint256 public constant MAX_LP_FEE = 2000;
+    uint256 public constant MAX_ROYALTIES_FEE = 4000;
+    uint256 public constant MAX_PROTOCOL_FEE = 4000;
+    uint256 public constant MAX_LP_FEE = 4000;
 
     address public protocolFeeBeneficiary;
 
