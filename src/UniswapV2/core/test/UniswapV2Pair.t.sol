@@ -11,13 +11,13 @@ import "../UniswapV2Factory.sol";
 import "./mock/UniswapV2PairOriginal.sol";
 
 contract UniswapV2PairTest is Test {
-    UniswapV2Pair public pair;
-    UniswapV2Pair public pairWithFees;
-    UniswapV2PairOriginal public pairOriginal;
+    UniswapV2Pair pair;
+    UniswapV2Pair pairWithFees;
+    UniswapV2PairOriginal pairOriginal;
     UniswapV2Factory factory;
 
-    ERC20Mintable public token0 = new ERC20Mintable();
-    ERC20Mintable public token1 = new ERC20Mintable();
+    ERC20Mintable token0 = new ERC20Mintable();
+    ERC20Mintable token1 = new ERC20Mintable();
 
     address user1 = address(10000001);
     address user2 = address(10000002);
@@ -237,14 +237,19 @@ contract UniswapV2PairTest is Test {
         assertEq(token0.balanceOf(user1), 0);
         assertEq(token1.balanceOf(user1), 0);
 
-        (address beneficiary, uint256 royalties) = factory.getRoyaltiesFee(address(pairWithFees));
+        (
+            ,
+            address beneficiary,
+            uint256 royalties,
+            address protocolBeneficiary,
+            uint256 protocolBeneficiaryFee
+        ) = factory.getFeesAndRecipients(address(pairWithFees));
+
         assertEq(beneficiary, royaltiesBeneficiary);
         assertEq(royalties, royaltiesFee);
         assertEq(token0.balanceOf(beneficiary), 0);
         uint256 royaltiesAmount = _amount0In * royalties / 10000;
 
-        address protocolBeneficiary = factory.protocolFeeBeneficiary();
-        uint256 protocolBeneficiaryFee = factory.getProtocolFee(address(pairWithFees));
         assertEq(protocolBeneficiary, protocolFeeBeneficiary);
         assertEq(protocolBeneficiaryFee, protocolFee);
         assertEq(token0.balanceOf(protocolBeneficiary), 0);

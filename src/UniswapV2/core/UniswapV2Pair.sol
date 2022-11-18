@@ -117,12 +117,18 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         emit Sync(reserve0, reserve1);
     }
 
-    function _takeFees(uint balance0Adjusted, uint balance1Adjusted, uint amount0In, uint amount1In) internal returns (uint balance0, uint balance1) {
+    function _takeFees(
+        uint balance0Adjusted,
+        uint balance1Adjusted,
+        uint amount0In,
+        uint amount1In
+    ) internal returns (uint balance0, uint balance1) {
         (
-            uint256 royaltiesFee,
-            uint256 protocolFee,,
+            ,
             address royaltiesBeneficiary,
-            address protocolFeeBeneficiary
+            uint256 royaltiesFee,
+            address protocolFeeBeneficiary,
+            uint256 protocolFee
         ) = IUniswapV2Factory(factory).getFeesAndRecipients(address(this));
 
         address _token0 = token0;
