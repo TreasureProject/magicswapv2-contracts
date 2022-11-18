@@ -17,52 +17,35 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
     Fees public defaultFees;
     mapping(address => Fees) public pairFees;
 
-    /// @dev NOTICE: If malicious owner sets PROTOCOL_FEE and LP_FEE to 0, then ROYALTIES_FEE to MAX_FEE
-    /// and then sets defaultFees to MAX_FEE, it's possible to arrive at total fees being equal to
-    /// MAX_FEE + MAX_FEE even though MAX_FEE should be the limit.
-    modifier checkMaxFee(address _pair) {
-        _;
-
-        require(getTotalFee(_pair) <= MAX_FEE, 'MagicswapV2: MAX_FEE');
-    }
-
     constructor(Fees memory _fees, address _protocolFeeBeneficiary) {
         setDefaultFees(_fees);
         setProtocolFeeBeneficiary(_protocolFeeBeneficiary);
     }
 
-    function getTotalFee(address _pair) public view returns (uint256 totalFee) {
-        (, uint256 royaltiesFee) = getRoyaltiesFee(_pair);
-        totalFee = royaltiesFee + getProtocolFee(_pair) + getLpFee(_pair);
+    function getTotalFee(address _pair) public view returns (uint256) {
+        (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee) = _getFees(_pair);
+        return lpFee + royaltiesFee + protocolFee;
+    }
+
+    function getFees(address _pair)
+        public
+        view
+        returns (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee)
+    {
+        return _getFees(_pair);
     }
 
     function getFeesAndRecipients(address _pair) public view returns (
-        uint256 royaltiesFee,
-        uint256 protocolFee,
         uint256 lpFee,
         address royaltiesBeneficiary,
-        address protocolBeneficiary
+        uint256 royaltiesFee,
+        address protocolBeneficiary,
+        uint256 protocolFee
     ) {
-        (royaltiesBeneficiary, royaltiesFee) = getRoyaltiesFee(_pair);
-        protocolFee = getProtocolFee(_pair);
-        lpFee = getLpFee(_pair);
+        (lpFee, royaltiesFee, protocolFee) = _getFees(_pair);
+
+        royaltiesBeneficiary = pairFees[_pair].royaltiesBeneficiary;
         protocolBeneficiary = protocolFeeBeneficiary;
-    }
-
-    function getRoyaltiesFee(address _pair) public view returns (address beneficiary, uint256 royaltiesFee) {
-        return (pairFees[_pair].royaltiesBeneficiary, pairFees[_pair].royaltiesFee);
-    }
-
-    function getProtocolFee(address _pair) public view returns (uint256 protocolFee) {
-        protocolFee = pairFees[_pair].protocolFee;
-
-        if (protocolFee == 0) protocolFee = defaultFees.protocolFee;
-    }
-
-    function getLpFee(address _pair) public view returns (uint256 lpFee){
-        lpFee = pairFees[_pair].lpFee;
-
-        if (lpFee == 0) lpFee = defaultFees.lpFee;
     }
 
     function allPairsLength() external view returns (uint) {
@@ -87,24 +70,25 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
     }
 
     function setDefaultFees(Fees memory _fees) public onlyOwner {
-        require(_fees.protocolFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
-        require(_fees.lpFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
-        require(_fees.protocolFee + _fees.lpFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
+        require(_fees.protocolFee <= MAX_FEE, 'MagicswapV2: protocolFee > MAX_FEE');
+        require(_fees.lpFee <= MAX_FEE, 'MagicswapV2: lpFee > MAX_FEE');
+        require(_fees.protocolFee + _fees.lpFee <= MAX_FEE, 'MagicswapV2: protocolFee + lpFee > MAX_FEE');
         defaultFees = _fees;
     }
 
-    function setRoyaltiesFee(address _pair, address _beneficiary, uint256 _royaltiesFee)
-        external
-        checkMaxFee(_pair)
-        onlyOwner
-    {
-        require(_royaltiesFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
+    function setLpFee(address _pair, uint256 _lpFee) external onlyOwner {
+        require(_lpFee <= MAX_FEE, 'MagicswapV2: _lpFee > MAX_FEE');
+        pairFees[_pair].lpFee = _lpFee;
+    }
+
+    function setRoyaltiesFee(address _pair, address _beneficiary, uint256 _royaltiesFee) external onlyOwner {
+        require(_royaltiesFee <= MAX_FEE, 'MagicswapV2: _royaltiesFee > MAX_FEE');
         pairFees[_pair].royaltiesBeneficiary = _beneficiary;
         pairFees[_pair].royaltiesFee = _royaltiesFee;
     }
 
-    function setProtocolFee(address _pair, uint256 _protocolFee) external checkMaxFee(_pair) onlyOwner {
-        require(_protocolFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
+    function setProtocolFee(address _pair, uint256 _protocolFee) external onlyOwner {
+        require(_protocolFee <= MAX_FEE, 'MagicswapV2: _protocolFee > MAX_FEE');
         pairFees[_pair].protocolFee = _protocolFee;
     }
 
@@ -113,8 +97,45 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
         protocolFeeBeneficiary = _beneficiary;
     }
 
-    function setLpFee(address _pair, uint256 _lpFee) external checkMaxFee(_pair) onlyOwner {
-        require(_lpFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
-        pairFees[_pair].lpFee = _lpFee;
+    function _getLpFee(address _pair) internal view returns (uint256 lpFee) {
+        lpFee = pairFees[_pair].lpFee;
+
+        if (lpFee == 0) lpFee = defaultFees.lpFee;
+    }
+
+    function _getRoyaltiesFee(address _pair) internal view returns (uint256 royaltiesFee) {
+        return pairFees[_pair].royaltiesFee;
+    }
+
+    function _getProtocolFee(address _pair) internal view returns (uint256 protocolFee) {
+        protocolFee = pairFees[_pair].protocolFee;
+
+        if (protocolFee == 0) protocolFee = defaultFees.protocolFee;
+    }
+
+    function _getFees(address _pair)
+        internal
+        view
+        returns (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee)
+    {
+        lpFee = _getLpFee(_pair);
+        /// lpFee should never be above MAX_FEE but never too safe.
+        /// If lpFee is set to MAX_FEE then we know there's no more space for other fees
+        if (lpFee >= MAX_FEE) {
+            return (MAX_FEE, 0, 0);
+        }
+
+        royaltiesFee = _getRoyaltiesFee(_pair);
+        /// if royaltiesFee + lpFee is greater than MAX_FEE, then decrease royaltiesFee
+        /// and return as we know there's no more space for other fees
+        if (royaltiesFee >= MAX_FEE - lpFee) {
+            return (lpFee, MAX_FEE - lpFee, 0);
+        }
+
+        protocolFee = _getProtocolFee(_pair);
+        /// if protocolFee + royaltiesFee + lpFee is greater than MAX_FEE, then decrease protocolFee
+        if (protocolFee > MAX_FEE - lpFee - royaltiesFee) {
+            protocolFee = MAX_FEE - lpFee - royaltiesFee;
+        }
     }
 }
