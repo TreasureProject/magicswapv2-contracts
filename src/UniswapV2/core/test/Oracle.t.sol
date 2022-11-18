@@ -7,8 +7,8 @@ import "lib/ERC20Mintable.sol";
 
 import "../UniswapV2Pair.sol";
 import "../../periphery/libraries/UniswapV2Library.sol";
+import "../../periphery/libraries/OracleLibrary.sol";
 import "../UniswapV2Factory.sol";
-import "../libraries/OracleLibrary.sol";
 
 contract OracleImpl {
     function consult(address pair, uint32 period) public view returns (uint256) {

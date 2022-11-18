@@ -1,6 +1,6 @@
 pragma solidity >=0.8.17;
 
-import '../interfaces/IUniswapV2Pair.sol';
+import '../../core/interfaces/IUniswapV2Pair.sol';
 
 /// @title Oracle library
 /// @notice Provides functions to integrate with MagicswapV2 pool oracle
