@@ -44,10 +44,8 @@ library UniswapV2Library {
     function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut, address pair, address factory) internal view returns (uint amountOut) {
         require(amountIn > 0, 'UniswapV2Library: INSUFFICIENT_INPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'UniswapV2Library: INSUFFICIENT_LIQUIDITY');
-        (, uint256 royaltiesFee) = IUniswapV2Factory(factory).getRoyaltiesFee(pair);
-        uint protocolFee = IUniswapV2Factory(factory).getProtocolFee(pair);
-        uint lpFee = IUniswapV2Factory(factory).getLpFee(pair);
-        uint amountInWithFee = amountIn.mul(10000 - royaltiesFee - protocolFee - lpFee);
+        uint totalFee = IUniswapV2Factory(factory).getTotalFee(pair);
+        uint amountInWithFee = amountIn.mul(10000 - totalFee);
         uint numerator = amountInWithFee.mul(reserveOut);
         uint denominator = reserveIn.mul(10000).add(amountInWithFee);
         amountOut = numerator / denominator;
@@ -57,11 +55,9 @@ library UniswapV2Library {
     function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut, address pair, address factory) internal view returns (uint amountIn) {
         require(amountOut > 0, 'UniswapV2Library: INSUFFICIENT_OUTPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'UniswapV2Library: INSUFFICIENT_LIQUIDITY');
-        (, uint256 royaltiesFee) = IUniswapV2Factory(factory).getRoyaltiesFee(pair);
-        uint protocolFee = IUniswapV2Factory(factory).getProtocolFee(pair);
-        uint lpFee = IUniswapV2Factory(factory).getLpFee(pair);
+        uint totalFee = IUniswapV2Factory(factory).getTotalFee(pair);
         uint numerator = reserveIn.mul(amountOut).mul(10000);
-        uint denominator = reserveOut.sub(amountOut).mul(10000 - royaltiesFee - protocolFee - lpFee);
+        uint denominator = reserveOut.sub(amountOut).mul(10000 - totalFee);
         amountIn = (numerator / denominator).add(1);
     }
 
