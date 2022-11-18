@@ -19,6 +19,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     using Oracle for Oracle.Observation[65535];
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
+    uint public constant BASIS_POINTS = 10000;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
 
     // decimal points of token0
@@ -116,33 +117,41 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         emit Sync(reserve0, reserve1);
     }
 
-    function _takeFees(uint112 _reserve0, uint112 _reserve1, uint amount0Out, uint amount1Out) private {
-        (address royaltiesBeneficiary, uint256 royaltiesFee) = IUniswapV2Factory(factory).getRoyaltiesFee(address(this));
-        uint protocolFee = IUniswapV2Factory(factory).getProtocolFee(address(this));
-        address protocolFeeBeneficiary = IUniswapV2Factory(factory).protocolFeeBeneficiary();
+    function _takeFees(uint balance0Adjusted, uint balance1Adjusted, uint amount0In, uint amount1In) internal returns (uint balance0, uint balance1) {
+        (
+            uint256 royaltiesFee,
+            uint256 protocolFee,,
+            address royaltiesBeneficiary,
+            address protocolFeeBeneficiary
+        ) = IUniswapV2Factory(factory).getFeesAndRecipients(address(this));
 
         address _token0 = token0;
         address _token1 = token1;
-        uint balance0 = IERC20(_token0).balanceOf(address(this));
-        uint balance1 = IERC20(_token1).balanceOf(address(this));
-        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
-        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
 
-        if (royaltiesFee > 0) {
-            if (amount0In > 0) {
-                _safeTransfer(_token0, royaltiesBeneficiary, amount0In * royaltiesFee / 10000);
-            } else if (amount1In > 0) {
-                _safeTransfer(_token1, royaltiesBeneficiary, amount1In * royaltiesFee / 10000);
-            }
+        // optimistically set to amount0In
+        address feeToken = _token0;
+        uint256 amount = amount0In;
+
+        if (amount1In > 0) {
+            feeToken = _token1;
+            amount = amount1In;
         }
 
-        if (protocolFee > 0) {
-            if (amount0In > 0) {
-                _safeTransfer(_token0, protocolFeeBeneficiary, amount0In * protocolFee / 10000);
-            } else if (amount1In > 0) {
-                _safeTransfer(_token1, protocolFeeBeneficiary, amount1In * protocolFee / 10000);
-            }
+        if (amount > 0 && royaltiesFee > 0) {
+            _safeTransfer(feeToken, royaltiesBeneficiary, amount * royaltiesFee / BASIS_POINTS);
         }
+
+        if (amount > 0 && protocolFee > 0) {
+            _safeTransfer(feeToken, protocolFeeBeneficiary, amount * protocolFee / BASIS_POINTS);
+        }
+
+        balance0 = IERC20(_token0).balanceOf(address(this));
+        balance1 = IERC20(_token1).balanceOf(address(this));
+
+        /// @dev Make sure that either balance does not go below adjusted balance used for K calcualtions.
+        /// If balances after fee transfers are above or equal adjusted balances then K still holds.
+        require(balance0 >= balance0Adjusted / BASIS_POINTS, 'MagicswapV2: balance0Adjusted');
+        require(balance1 >= balance1Adjusted / BASIS_POINTS, 'MagicswapV2: balance1Adjusted');
     }
 
     // this low-level function should be called from a contract which performs important safety checks
@@ -196,9 +205,6 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         require(amount0Out < _reserve0 && amount1Out < _reserve1, 'MagicswapV2: INSUFFICIENT_LIQUIDITY');
 
-        // royalties and protocol fees are paid upfront so the rest of the logic just handles lp fees
-        _takeFees(_reserve0, _reserve1, amount0Out, amount1Out);
-
         uint balance0;
         uint balance1;
         { // scope for _token{0,1}, avoids stack too deep errors
@@ -216,10 +222,11 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         require(amount0In > 0 || amount1In > 0, 'MagicswapV2: INSUFFICIENT_INPUT_AMOUNT');
 
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        uint lpFee = IUniswapV2Factory(factory).getLpFee(address(this));
-        uint balance0Adjusted = balance0.mul(10000).sub(amount0In.mul(lpFee));
-        uint balance1Adjusted = balance1.mul(10000).sub(amount1In.mul(lpFee));
-        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(10000**2), 'MagicswapV2: K');
+        uint totalFee = IUniswapV2Factory(factory).getTotalFee(address(this));
+        uint balance0Adjusted = balance0.mul(BASIS_POINTS).sub(amount0In.mul(totalFee));
+        uint balance1Adjusted = balance1.mul(BASIS_POINTS).sub(amount1In.mul(totalFee));
+        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(BASIS_POINTS**2), 'MagicswapV2: K');
+        (balance0, balance1) = _takeFees(balance0Adjusted, balance1Adjusted, amount0In, amount1In);
         }
 
         _update(balance0, balance1, _reserve0, _reserve1);
