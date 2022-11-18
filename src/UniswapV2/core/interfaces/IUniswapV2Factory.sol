@@ -13,9 +13,17 @@ interface IUniswapV2Factory {
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
+    function getTotalFee(address pair) external view returns (uint256 totalFee);
     function getRoyaltiesFee(address pair) external view returns (address beneficiary, uint256 royaltiesFee);
     function getProtocolFee(address pair) external view returns (uint256 protocolFee);
     function getLpFee(address pair) external view returns (uint256 lpFee);
+    function getFeesAndRecipients(address _pair) external view returns (
+        uint256 royaltiesFee,
+        uint256 protocolFee,
+        uint256 lpFee,
+        address royaltiesBeneficiary,
+        address protocolFeeBeneficiary
+    );
     function protocolFeeBeneficiary() external view returns (address protocolFeeBeneficiary);
 
     function pairFees(address pair) external view returns (address, uint256, uint256, uint256);

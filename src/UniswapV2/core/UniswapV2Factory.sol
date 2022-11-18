@@ -6,9 +6,8 @@ import './interfaces/IUniswapV2Factory.sol';
 import './UniswapV2Pair.sol';
 
 contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
-    uint256 public constant MAX_ROYALTIES_FEE = 4000;
-    uint256 public constant MAX_PROTOCOL_FEE = 4000;
-    uint256 public constant MAX_LP_FEE = 4000;
+    /// @dev Fee is denominated in basis points so 5000 / 10000 = 50%
+    uint256 public constant MAX_FEE = 5000;
 
     address public protocolFeeBeneficiary;
 
@@ -18,22 +17,49 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
     Fees public defaultFees;
     mapping(address => Fees) public pairFees;
 
+    /// @dev NOTICE: If malicious owner sets PROTOCOL_FEE and LP_FEE to 0, then ROYALTIES_FEE to MAX_FEE
+    /// and then sets defaultFees to MAX_FEE, it's possible to arrive at total fees being equal to
+    /// MAX_FEE + MAX_FEE even though MAX_FEE should be the limit.
+    modifier checkMaxFee(address _pair) {
+        _;
+
+        require(getTotalFee(_pair) <= MAX_FEE, 'MagicswapV2: MAX_FEE');
+    }
+
     constructor(Fees memory _fees, address _protocolFeeBeneficiary) {
         setDefaultFees(_fees);
         setProtocolFeeBeneficiary(_protocolFeeBeneficiary);
     }
 
-    function getRoyaltiesFee(address _pair) external view returns (address beneficiary, uint256 royaltiesFee) {
+    function getTotalFee(address _pair) public view returns (uint256 totalFee) {
+        (, uint256 royaltiesFee) = getRoyaltiesFee(_pair);
+        totalFee = royaltiesFee + getProtocolFee(_pair) + getLpFee(_pair);
+    }
+
+    function getFeesAndRecipients(address _pair) public view returns (
+        uint256 royaltiesFee,
+        uint256 protocolFee,
+        uint256 lpFee,
+        address royaltiesBeneficiary,
+        address protocolBeneficiary
+    ) {
+        (royaltiesBeneficiary, royaltiesFee) = getRoyaltiesFee(_pair);
+        protocolFee = getProtocolFee(_pair);
+        lpFee = getLpFee(_pair);
+        protocolBeneficiary = protocolFeeBeneficiary;
+    }
+
+    function getRoyaltiesFee(address _pair) public view returns (address beneficiary, uint256 royaltiesFee) {
         return (pairFees[_pair].royaltiesBeneficiary, pairFees[_pair].royaltiesFee);
     }
 
-    function getProtocolFee(address _pair) external view returns (uint256 protocolFee) {
+    function getProtocolFee(address _pair) public view returns (uint256 protocolFee) {
         protocolFee = pairFees[_pair].protocolFee;
 
         if (protocolFee == 0) protocolFee = defaultFees.protocolFee;
     }
 
-    function getLpFee(address _pair) external view returns (uint256 lpFee){
+    function getLpFee(address _pair) public view returns (uint256 lpFee){
         lpFee = pairFees[_pair].lpFee;
 
         if (lpFee == 0) lpFee = defaultFees.lpFee;
@@ -61,20 +87,24 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
     }
 
     function setDefaultFees(Fees memory _fees) public onlyOwner {
-        require(_fees.royaltiesFee <= MAX_ROYALTIES_FEE, 'MagicswapV2: MAX_ROYALTIES_FEE');
-        require(_fees.protocolFee <= MAX_PROTOCOL_FEE, 'MagicswapV2: MAX_PROTOCOL_FEE');
-        require(_fees.lpFee <= MAX_LP_FEE, 'MagicswapV2: MAX_LP_FEE');
+        require(_fees.protocolFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
+        require(_fees.lpFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
+        require(_fees.protocolFee + _fees.lpFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
         defaultFees = _fees;
     }
 
-    function setRoyaltiesFee(address _pair, address _beneficiary, uint256 _royaltiesFee) external onlyOwner {
-        require(_royaltiesFee <= MAX_ROYALTIES_FEE, 'MagicswapV2: MAX_ROYALTIES_FEE');
+    function setRoyaltiesFee(address _pair, address _beneficiary, uint256 _royaltiesFee)
+        external
+        checkMaxFee(_pair)
+        onlyOwner
+    {
+        require(_royaltiesFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
         pairFees[_pair].royaltiesBeneficiary = _beneficiary;
         pairFees[_pair].royaltiesFee = _royaltiesFee;
     }
 
-    function setProtocolFee(address _pair, uint256 _protocolFee) external onlyOwner {
-        require(_protocolFee <= MAX_PROTOCOL_FEE, 'MagicswapV2: MAX_PROTOCOL_FEE');
+    function setProtocolFee(address _pair, uint256 _protocolFee) external checkMaxFee(_pair) onlyOwner {
+        require(_protocolFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
         pairFees[_pair].protocolFee = _protocolFee;
     }
 
@@ -83,8 +113,8 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
         protocolFeeBeneficiary = _beneficiary;
     }
 
-    function setLpFee(address _pair, uint256 _lpFee) external onlyOwner {
-        require(_lpFee <= MAX_LP_FEE, 'MagicswapV2: MAX_LP_FEE');
+    function setLpFee(address _pair, uint256 _lpFee) external checkMaxFee(_pair) onlyOwner {
+        require(_lpFee <= MAX_FEE, 'MagicswapV2: MAX_FEE');
         pairFees[_pair].lpFee = _lpFee;
     }
 }
