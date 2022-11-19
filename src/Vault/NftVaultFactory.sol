@@ -29,8 +29,8 @@ contract NftVaultFactory is INftVaultFactory {
         return vaults.length();
     }
 
-    function isVault(address _vault) external view returns (uint256) {
-        // TODO
+    function isVault(address _vault) external view returns (bool) {
+        return vaults.contains(_vault);
     }
 
     function getVault(INftVault.CollectionData[] memory _collections) public view returns (INftVault vault) {

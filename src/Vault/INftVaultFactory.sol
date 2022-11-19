@@ -20,6 +20,7 @@ interface INftVaultFactory {
     function getAllVaults() external view returns (address[] memory);
     function getVaultAt(uint256 _i) external view returns (address);
     function getVaultLength() external view returns (uint256);
+    function isVault(address _vault) external view returns (bool);
     function getVault(INftVault.CollectionData[] memory _collections) external view returns (INftVault vault);
     function exists(INftVault.CollectionData[] memory _collections) external view returns (bool);
     function hashVault(INftVault.CollectionData[] memory _collections) external pure returns (bytes32);
