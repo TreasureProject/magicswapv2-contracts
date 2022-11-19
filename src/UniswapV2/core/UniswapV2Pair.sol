@@ -7,7 +7,7 @@ import './interfaces/IUniswapV2Pair.sol';
 import './interfaces/IUniswapV2Callee.sol';
 import './interfaces/IUniswapV2Factory.sol';
 
-import './libraries/Math.sol';
+import './libraries/UniswapV2Math.sol';
 import './libraries/UQ112x112.sol';
 import './libraries/Oracle.sol';
 
@@ -170,10 +170,10 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
 
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
         if (_totalSupply == 0) {
-            liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
+            liquidity = UniswapV2Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
            _mint(address(0), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
         } else {
-            liquidity = Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
+            liquidity = UniswapV2Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
         }
         require(liquidity > 0, 'MagicswapV2: INSUFFICIENT_LIQUIDITY_MINTED');
         _mint(to, liquidity);
