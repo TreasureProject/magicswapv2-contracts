@@ -64,7 +64,8 @@ interface IMagicSwapV2Router is IUniswapV2Router02 {
         uint256 _amountAMin,
         uint256 _amountBMin,
         address _to,
-        uint256 _deadline
+        uint256 _deadline,
+        bool _swapLeftover
     ) external returns (uint256 amountA, uint256 amountB);
 
     /// @notice Remove liquidity from UniV2 pool and get NFTs and ETH
@@ -79,7 +80,8 @@ interface IMagicSwapV2Router is IUniswapV2Router02 {
         uint256 _amountTokenMin,
         uint256 _amountETHMin,
         address _to,
-        uint256 _deadline
+        uint256 _deadline,
+        bool _swapLeftover
     ) external returns (uint256 amountToken, uint256 amountETH);
 
     /// @notice Swap NFTs for ERC20
@@ -144,13 +146,9 @@ interface IMagicSwapV2Router is IUniswapV2Router02 {
         uint256 _deadline
     ) external returns (uint256[] memory amounts);
 
-    function swapLeftoverIfAny(
-        address _tokenA,
-        address _tokenB,
-        uint256 _amountA,
-        uint256 _amountABurned,
-        uint256 _amountB
-    ) external returns (uint256 newAmountA, uint256 newAmountB);
+    function swapLeftoverIfAny(address _tokenA, address _tokenB, uint256 _amountIn)
+        external
+        returns (uint256 amountOut);
 
-    function getSum(uint256[] memory _list) external pure returns (uint256 sum);
+    function nftAmountToERC20(uint256[] memory _list) external pure returns (uint256 amount);
 }
