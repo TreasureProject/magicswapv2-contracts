@@ -87,7 +87,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         return uint32(block.timestamp); // truncation is desired
     }
 
-    // update reserves and, on the first call per block, price accumulators
+    /// @dev update reserves and, on the first call per block, price accumulators
     function _update(uint balance0, uint balance1, uint112 _reserve0, uint112 _reserve1) private {
         require(balance0 <= type(uint112).max && balance1 <= type(uint112).max, 'MagicswapV2: OVERFLOW');
 
@@ -118,6 +118,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         emit Sync(reserve0, reserve1);
     }
 
+    /// @dev Calculates fees and sends them to beneficiaries
     function _takeFees(
         uint balance0Adjusted,
         uint balance1Adjusted,
@@ -139,15 +140,18 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         address feeToken = _token0;
         uint256 amount = amount0In;
 
+        // if amount1In is an input token, use that instead
         if (amount1In > 0) {
             feeToken = _token1;
             amount = amount1In;
         }
 
+        // send royalties
         if (amount > 0 && royaltiesFee > 0) {
             _safeTransfer(feeToken, royaltiesBeneficiary, amount * royaltiesFee / BASIS_POINTS);
         }
 
+        // send protocol fee
         if (amount > 0 && protocolFee > 0) {
             _safeTransfer(feeToken, protocolFeeBeneficiary, amount * protocolFee / BASIS_POINTS);
         }
@@ -155,13 +159,13 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
 
-        /// @dev Make sure that either balance does not go below adjusted balance used for K calcualtions.
-        /// If balances after fee transfers are above or equal adjusted balances then K still holds.
+        // Make sure that either balance does not go below adjusted balance used for K calcualtions.
+        // If balances after fee transfers are above or equal adjusted balances then K still holds.
         require(balance0 >= balance0Adjusted / BASIS_POINTS, 'MagicswapV2: balance0Adjusted');
         require(balance1 >= balance1Adjusted / BASIS_POINTS, 'MagicswapV2: balance1Adjusted');
     }
 
-    // this low-level function should be called from a contract which performs important safety checks
+    /// @dev this low-level function should be called from a contract which performs important safety checks
     function mint(address to) external lock returns (uint liquidity) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         uint balance0 = IERC20(token0).balanceOf(address(this));
@@ -183,7 +187,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         emit Mint(msg.sender, amount0, amount1);
     }
 
-    // this low-level function should be called from a contract which performs important safety checks
+    /// @dev this low-level function should be called from a contract which performs important safety checks
     function burn(address to) external lock returns (uint amount0, uint amount1) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         address _token0 = token0;                                // gas savings
@@ -206,7 +210,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
-    // this low-level function should be called from a contract which performs important safety checks
+    /// @dev this low-level function should be called from a contract which performs important safety checks
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock {
         require(amount0Out > 0 || amount1Out > 0, 'MagicswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
@@ -240,6 +244,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 
+    /// @dev Read TWAP price
     function observe(uint32[] calldata secondsAgos)
         external
         view
@@ -256,6 +261,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
             );
     }
 
+    /// @dev Increase number of data points for price history
     function increaseObservationCardinalityNext(uint16 _observationCardinalityNext)
         external
         override
@@ -269,7 +275,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
             emit IncreaseObservationCardinalityNext(observationCardinalityNextOld, observationCardinalityNextNew);
     }
 
-    // force balances to match reserves
+    /// @dev force balances to match reserves
     function skim(address to) external lock {
         address _token0 = token0; // gas savings
         address _token1 = token1; // gas savings
@@ -277,7 +283,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         _safeTransfer(_token1, to, IERC20(_token1).balanceOf(address(this)).sub(reserve1));
     }
 
-    // force reserves to match balances
+    /// @dev force reserves to match balances
     function sync() external lock {
         _update(IERC20(token0).balanceOf(address(this)), IERC20(token1).balanceOf(address(this)), reserve0, reserve1);
     }

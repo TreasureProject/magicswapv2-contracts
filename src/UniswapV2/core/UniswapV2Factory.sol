@@ -34,11 +34,13 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
         setProtocolFeeBeneficiary(_protocolFeeBeneficiary);
     }
 
+    /// @inheritdoc IUniswapV2Factory
     function getTotalFee(address _pair) public view returns (uint256) {
         (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee) = _getFees(_pair);
         return lpFee + royaltiesFee + protocolFee;
     }
 
+    /// @inheritdoc IUniswapV2Factory
     function getFees(address _pair)
         public
         view
@@ -47,6 +49,7 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
         return _getFees(_pair);
     }
 
+    /// @inheritdoc IUniswapV2Factory
     function getFeesAndRecipients(address _pair) public view returns (
         uint256 lpFee,
         address royaltiesBeneficiary,
@@ -81,6 +84,7 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
+    /// @inheritdoc IUniswapV2Factory
     function setDefaultFees(Fees memory _fees) public onlyOwner {
         require(_fees.protocolFee <= MAX_FEE, 'MagicswapV2: protocolFee > MAX_FEE');
         require(_fees.lpFee <= MAX_FEE, 'MagicswapV2: lpFee > MAX_FEE');
@@ -88,22 +92,26 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
         defaultFees = _fees;
     }
 
+    /// @inheritdoc IUniswapV2Factory
     function setLpFee(address _pair, uint256 _lpFee) external onlyOwner {
         require(_lpFee <= MAX_FEE, 'MagicswapV2: _lpFee > MAX_FEE');
         pairFees[_pair].lpFee = _lpFee;
     }
 
+    /// @inheritdoc IUniswapV2Factory
     function setRoyaltiesFee(address _pair, address _beneficiary, uint256 _royaltiesFee) external onlyOwner {
         require(_royaltiesFee <= MAX_FEE, 'MagicswapV2: _royaltiesFee > MAX_FEE');
         pairFees[_pair].royaltiesBeneficiary = _beneficiary;
         pairFees[_pair].royaltiesFee = _royaltiesFee;
     }
 
+    /// @inheritdoc IUniswapV2Factory
     function setProtocolFee(address _pair, uint256 _protocolFee) external onlyOwner {
         require(_protocolFee <= MAX_FEE, 'MagicswapV2: _protocolFee > MAX_FEE');
         pairFees[_pair].protocolFee = _protocolFee;
     }
 
+    /// @inheritdoc IUniswapV2Factory
     function setProtocolFeeBeneficiary(address _beneficiary) public onlyOwner {
         require(_beneficiary != address(0), 'MagicswapV2: BENEFICIARY');
         protocolFeeBeneficiary = _beneficiary;
