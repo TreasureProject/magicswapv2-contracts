@@ -146,7 +146,7 @@ interface IMagicSwapV2Router is IUniswapV2Router02 {
         uint256 _deadline
     ) external returns (uint256[] memory amounts);
 
-    function swapLeftoverIfAny(address _tokenA, address _tokenB, uint256 _amountIn)
+    function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn)
         external
         returns (uint256 amountOut);
 
