@@ -21,7 +21,7 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'301d0882aaa3655df9893d3958a2bcb02124ae6155e812fd6205fbab5c222291' // init code hash, keccak256(type(UniswapV2Pair).creationCode)
+                hex'86764168ae62ed7a33075f7c6e9aed285b8a546d598fa08a3e177067dd975096' // init code hash, keccak256(type(UniswapV2Pair).creationCode)
             )))));
     }
 
@@ -78,7 +78,8 @@ library UniswapV2Library {
         amounts[amounts.length - 1] = amountOut;
         for (uint i = path.length - 1; i > 0; i--) {
             (uint reserveIn, uint reserveOut) = getReserves(factory, path[i - 1], path[i]);
-            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, pairFor(factory, path[i], path[i + 1]), factory);
+            address pair = pairFor(factory, path[i - 1], path[i]);
+            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, pair, factory);
         }
     }
 }
