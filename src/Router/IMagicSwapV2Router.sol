@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.17;
 
 import "../UniswapV2/periphery/interfaces/IUniswapV2Router02.sol";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.17;
 
 /// @title Oracle (modifier version of Oracle.sol from UniswapV3)
