@@ -36,8 +36,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         ONE = 10**decimals();
     }
 
-    /// @notice Initialize Vault with collection config
-    /// @dev Called by factory during deployment
+    /// @inheritdoc INftVault
     function init(CollectionData[] memory _collections) external {
         if (_collections.length == 0) revert InvalidCollections();
         if (allowedCollections.length() > 0) revert Initialized();
@@ -82,10 +81,12 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
+    /// @inheritdoc INftVault
     function hashVault(INftVault.CollectionData[] memory _collections) public pure returns (bytes32) {
         return keccak256(abi.encode(_collections));
     }
 
+    /// @inheritdoc INftVault
     function getAllowedCollections() external view returns (address[] memory collections) {
         collections = new address[](allowedCollections.length());
 
@@ -95,10 +96,12 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
+    /// @inheritdoc INftVault
     function getAllowedCollectionsLength() external view returns (uint256) {
         return allowedCollections.length();
     }
 
+    /// @inheritdoc INftVault
     function getAllowedCollectionData(address _collectionAddr) external view returns (CollectionData memory) {
         return CollectionData({
             addr: _collectionAddr,
@@ -108,6 +111,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         });
     }
 
+    /// @inheritdoc INftVault
     function validateNftType(address _collectionAddr, NftType _nftType) public view returns (uint256 nftType) {
         bool supportsERC721 = ERC165Checker.supportsInterface(_collectionAddr, type(IERC721).interfaceId);
         bool supportsERC1155 = ERC165Checker.supportsInterface(_collectionAddr, type(IERC1155).interfaceId);
@@ -120,6 +124,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         nftType = uint256(_nftType);
     }
 
+    /// @inheritdoc INftVault
     function isTokenAllowed(address _collection, uint256 _tokenId) public view returns (bool) {
         (bool isCollectionAllowed,) = allowedCollections.tryGet(_collection);
 
@@ -131,6 +136,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
             );
     }
 
+    /// @inheritdoc INftVault
     function getSentTokenBalance(address _collection, uint256 _tokenId) public view returns (uint256) {
         uint256 currentBalance = balances[_collection][_tokenId];
         NftType nftType = NftType(allowedCollections.get(_collection));
@@ -148,6 +154,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
+    /// @inheritdoc INftVault
     function deposit(
         address _to,
         address _collection,
@@ -166,6 +173,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         _mint(_to, amountMinted);
     }
 
+    /// @inheritdoc INftVault
     function depositBatch(
         address _to,
         address[] memory _collection,
@@ -177,6 +185,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
+    /// @inheritdoc INftVault
     function withdraw(
         address _to,
         address _collection,
@@ -203,6 +212,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         emit Withdraw(_to, _collection, _tokenId, _amount);
     }
 
+    /// @inheritdoc INftVault
     function withdrawBatch(
         address _to,
         address[] memory _collection,
@@ -214,7 +224,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
-    /// @notice Allow anyone to withdraw tokens sent to this vault by accident
+    /// @inheritdoc INftVault
     function skim(
         address _to,
         NftType nftType,
@@ -222,7 +232,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         uint256 _tokenId,
         uint256 _amount
     ) external {
-        /// @dev Cannot skim supported token
+        // Cannot skim supported token
         if (isTokenAllowed(_collection, _tokenId)) revert MustBeDisallowedToken();
 
         if (nftType == NftType.ERC721) {
