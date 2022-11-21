@@ -396,6 +396,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         }
     }
 
+    /// @inheritdoc IMagicSwapV2Router
     function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn)
         public
         returns (uint256 amountOut)
@@ -422,6 +423,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         return amounts[1];
     }
 
+    /// @inheritdoc IMagicSwapV2Router
     function nftAmountToERC20(uint256[] memory _list) public pure returns (uint256 amount) {
         for (uint256 i = 0; i < _list.length; i++) {
             amount += _list[i];
