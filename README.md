@@ -1,7 +1,7 @@
 # MagicSwapV2
 > NFTX meets UniswapV2 meets UniswapV3 TWAP aka **MagicSwapV2**.
 
-### MagicSwapV2 is a permissionless DEX for NFTs with automated royalties and decentralized NFT TWAP oracle. 
+### MagicSwapV2 is a permissionless DEX for NFTs with automated royalties and decentralized NFT TWAP oracle.
 
 MagicSwapV2 is built with following independent modules:
 - Vault
@@ -37,9 +37,14 @@ Then, to load the variables in the .env file call
 source .env
 ```
 
-To deploy and verify MagicSwapV2 contracts
+To deploy and verify MagicSwapV2 contracts run
 ```
 forge script script/MagicswapV2.s.sol:MagicswapV2Script --rpc-url $ARBITRUM_RPC --broadcast --verify -vvvv
+```
+
+To deploy and verify Staking Contracts run
+```
+forge script script/StakingContract.s.sol:StakingContractScript --rpc-url $ARBITRUM_RPC --broadcast --verify -vvvv
 ```
 
 To simulate deployment (dry run), remove `--broadcast` option from above.

@@ -16,7 +16,7 @@ package "Router" {
 }
 
 
-package "Rewards (Sushi)" {
+package "Rewards" {
   [StakingContractMainnet]
 }
 
@@ -24,6 +24,5 @@ package "Rewards (Sushi)" {
 [MagicSwapV2Router] --> [UniswapV2Pool]
 
 [MagicSwapV2Router] - [UniswapV2Router]
-[StakingContractMainnet] -> [UniswapV2Pool]
 
 @enduml
