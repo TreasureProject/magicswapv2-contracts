@@ -18,8 +18,19 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
     Fees public defaultFees;
     mapping(address => Fees) public pairFees;
 
-    constructor(Fees memory _fees, address _protocolFeeBeneficiary) {
-        setDefaultFees(_fees);
+    constructor(
+        uint256 _defaultProtocolFee,
+        uint256 _defaultLpFee,
+        address _protocolFeeBeneficiary
+    ) {
+        Fees memory startFees = Fees({
+            royaltiesBeneficiary: address(0),
+            royaltiesFee: 0,
+            protocolFee: _defaultProtocolFee,
+            lpFee: _defaultLpFee
+        });
+
+        setDefaultFees(startFees);
         setProtocolFeeBeneficiary(_protocolFeeBeneficiary);
     }
 

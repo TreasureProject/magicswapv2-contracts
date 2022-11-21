@@ -24,15 +24,7 @@ contract UniswapV2FactoryTest is Test {
 
     function setUp() public {
         vm.prank(owner);
-        factory = new UniswapV2Factory(
-            IUniswapV2Factory.Fees({
-                royaltiesBeneficiary: address(0),
-                royaltiesFee: 0,
-                protocolFee: 0,
-                lpFee: 0
-            }),
-            protocolFeeBeneficiary
-        );
+        factory = new UniswapV2Factory(0, 0, protocolFeeBeneficiary);
 
         MAX_FEE = factory.MAX_FEE();
         tooBigFee = MAX_FEE + 1;

@@ -35,15 +35,7 @@ contract OracleTest is Test {
     function setUp() public {
         vm.warp(TIMESTAMP);
 
-        factory = new UniswapV2Factory(
-            IUniswapV2Factory.Fees({
-                royaltiesBeneficiary: address(0),
-                royaltiesFee: 0,
-                protocolFee: 150,
-                lpFee: 30
-            }),
-            protocolFeeBeneficiary
-        );
+        factory = new UniswapV2Factory(150, 30, protocolFeeBeneficiary);
 
         pair = UniswapV2Pair(factory.createPair(address(WETH), address(DAI)));
         WETH.mint(address(pair), 1000e18);

@@ -31,15 +31,7 @@ contract UniswapV2PairTest is Test {
     uint256 protocolFee = 50;
 
     function setUp() public {
-        factory = new UniswapV2Factory(
-            IUniswapV2Factory.Fees({
-                royaltiesBeneficiary: address(0),
-                royaltiesFee: 0,
-                protocolFee: 0,
-                lpFee: 30
-            }),
-            protocolFeeBeneficiary
-        );
+        factory = new UniswapV2Factory(0, 30, protocolFeeBeneficiary);
 
         vm.startPrank(address(factory));
 

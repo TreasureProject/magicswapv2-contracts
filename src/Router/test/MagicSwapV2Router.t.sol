@@ -49,15 +49,7 @@ contract MagicSwapV2RouterTest is Test {
     function setUp() public {
         weth = new WETH();
 
-        factory = new UniswapV2Factory(
-            IUniswapV2Factory.Fees({
-                royaltiesBeneficiary: address(0),
-                royaltiesFee: 0,
-                protocolFee: 0,
-                lpFee: 30
-            }),
-            protocolFeeBeneficiary
-        );
+        factory = new UniswapV2Factory(0, 30, protocolFeeBeneficiary);
 
         magicSwapV2Router = new MagicSwapV2Router(address(factory), address(weth));
 
