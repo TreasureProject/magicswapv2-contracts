@@ -17,35 +17,43 @@ contract NftVaultFactory is INftVaultFactory {
     mapping(bytes32 => INftVault) public vaultHashMap;
     mapping(INftVault => uint256) public vaultIdMap;
 
+    /// @inheritdoc INftVaultFactory
     function getAllVaults() external view returns (address[] memory) {
         return vaults.values();
     }
 
+    /// @inheritdoc INftVaultFactory
     function getVaultAt(uint256 _i) external view returns (address) {
         return vaults.at(_i);
     }
 
+    /// @inheritdoc INftVaultFactory
     function getVaultLength() external view returns (uint256) {
         return vaults.length();
     }
 
+    /// @inheritdoc INftVaultFactory
     function isVault(address _vault) external view returns (bool) {
         return vaults.contains(_vault);
     }
 
+    /// @inheritdoc INftVaultFactory
     function getVault(INftVault.CollectionData[] memory _collections) public view returns (INftVault vault) {
         vault = vaultHashMap[hashVault(_collections)];
         if (address(vault) == address(0)) revert VaultDoesNotExist();
     }
 
+    /// @inheritdoc INftVaultFactory
     function exists(INftVault.CollectionData[] memory _collections) public view returns (bool) {
         return address(vaultHashMap[hashVault(_collections)]) != address(0);
     }
 
+    /// @inheritdoc INftVaultFactory
     function hashVault(INftVault.CollectionData[] memory _collections) public pure returns (bytes32) {
         return keccak256(abi.encode(_collections));
     }
 
+    /// @inheritdoc INftVaultFactory
     function createVault(INftVault.CollectionData[] memory _collections) external returns (INftVault vault) {
         bytes32 vaultHash = hashVault(_collections);
         vault = INftVault(vaultHashMap[vaultHash]);
