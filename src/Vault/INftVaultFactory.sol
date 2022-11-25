@@ -3,7 +3,15 @@ pragma solidity >=0.8.17;
 
 import "./INftVault.sol";
 
+/// @title Vault factory contract
 interface INftVaultFactory {
+    /// @notice Emitted when new vault is deployed
+    /// @param name vault's name
+    /// @param symbol vault's name
+    /// @param vault vault's address as INftVault
+    /// @param vaultId vault's index in `vaults` AddressSet
+    /// @param collections configuration used for vault creation
+    /// @param creator address of vault creator
     event VaultCreated(
         string name,
         string symbol,
@@ -13,6 +21,7 @@ interface INftVaultFactory {
         address creator
     );
 
+    /// @dev Vault does not exist
     error VaultDoesNotExist();
 
     /// @notice Get vault by its config hash

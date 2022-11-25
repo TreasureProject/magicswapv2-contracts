@@ -4,6 +4,7 @@ pragma solidity >=0.8.17;
 import "../UniswapV2/periphery/interfaces/IUniswapV2Router02.sol";
 import "../Vault/INftVault.sol";
 
+/// @title Router contract for swapping, managing liquidity and interacting with vaults
 interface IMagicSwapV2Router is IUniswapV2Router02 {
     /// @notice Deposit NFTs to vault
     /// @dev All NFTs must be approved for transfer. `_collection`, `_tokenId`
