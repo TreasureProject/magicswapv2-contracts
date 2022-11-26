@@ -6,13 +6,11 @@ import "lib/solmate/src/utils/ReentrancyGuard.sol";
 import "./libraries/PackedUint144.sol";
 import "./libraries/FullMath.sol";
 
-/*
-    Permissionless staking contract that allows any number of incentives to be running for any token (erc20).
-    Incentives can be created by anyone, the total reward amount must be sent at creation.
-    Incentives can be updated (change reward rate / duration).
-    Users can deposit their assets into the contract and then subscribe to any of the available incentives, up to 6 per token.
- */
-/// @dev Fork of https://github.com/sushiswap/StakingContract
+/// @title Fork of https://github.com/sushiswap/StakingContract
+/// @notice Permissionless staking contract that allows any number of incentives to be running for any token (erc20).
+///         Incentives can be created by anyone, the total reward amount must be sent at creation.
+///         Incentives can be updated (change reward rate / duration).
+///         Users can deposit their assets into the contract and then subscribe to any of the available incentives, up to 6 per token.
 contract StakingContractMainnet is ReentrancyGuard {
 
     using SafeTransferLib for ERC20;
