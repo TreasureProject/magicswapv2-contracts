@@ -46,6 +46,14 @@ interface INftVault {
     /// @param amount amount of token that is withdrawn, for ERC721 always 1
     event Withdraw(address to, address collection, uint256 tokenId, uint256 amount);
 
+    /// @notice Emitted when adding a wallet to deposit/withdraw allow list
+    /// @param wallet address that is allowed to deposit/withdraw
+    event Allowed(address wallet);
+
+    /// @notice Emitted when removing a wallet from deposit/withdraw allow list
+    /// @param wallet address that is disallowed to deposit/withdraw
+    event Disallowed(address wallet);
+
     /// @dev Contract is already initialized
     error Initialized();
     /// @dev Collection data is empty
@@ -73,6 +81,8 @@ interface INftVault {
     error UnsupportedNft();
     /// @dev Token is allowed in vault but must not be
     error MustBeDisallowedToken();
+    /// @dev User is not allowed to deposit or withdraw
+    error NotAllowed();
 
     /// @notice value of 1 token, including decimals
     function ONE() external view returns (uint256);
@@ -84,6 +94,16 @@ interface INftVault {
     /// @dev Called by factory during deployment
     /// @param collections struct array of allowed collections and token IDs
     function init(CollectionData[] memory collections) external;
+
+    /// @notice Returns true if wallet is allwed to deposit/withdraw. Only applicable to permissioned vault.
+    /// @dev Call `isPermissioned()` first to make sure vault is permissioned. Otherwise this function is irrelevant.
+    /// @param wallet address that is checked
+    /// @return true if wallet is allowed, false otherwise. For permissionless vault always returns false.
+    function allowedWallets(address wallet) external view returns (bool);
+
+    /// @notice Is vault permissioned
+    /// @return true if vault has an owner and is permissioned. False otherwise.
+    function isPermissioned() external view returns (bool);
 
     /// @notice Returns hash of vault configuration
     /// @param collections struct array of allowed collections and token IDs
@@ -194,4 +214,13 @@ interface INftVault {
         uint256 tokenId,
         uint256 amount
     ) external;
+
+    /// @notice Allow wallet to deposit/withdraw. Only applicable to permissioned vault.
+    /// @param wallet address that is allowed to deposit/withdraw
+    function allow(address wallet) external;
+
+    /// @notice Disallow wallet to deposit/withdraw. Only applicable to permissioned vault.
+    /// @param wallet address that is disallowed to deposit/withdraw
+    function disallow(address wallet) external;
+
 }

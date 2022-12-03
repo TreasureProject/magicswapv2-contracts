@@ -9,11 +9,12 @@ import "lib/openzeppelin-contracts/contracts/token/ERC1155/utils/ERC1155Holder.s
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableMap.sol";
 import "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165Checker.sol";
+import "lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 
 import "./INftVault.sol";
 import "./INftVaultFactory.sol";
 
-contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
+contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder, Ownable2Step {
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -32,8 +33,22 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     /// @notice maps collection address to tokenId to amount wrapped
     mapping(address => mapping(uint256 => uint256)) public balances;
 
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {
+    /// @notice deposit/withdraw allow list. Maps wallet address to bool, if true, wallet is allwed to deposit/withdraw
+    mapping(address => bool) public allowedWallets;
+
+    modifier onlyAllowed() {
+        if (isPermissioned() && !allowedWallets[msg.sender]) {
+            revert NotAllowed();
+        }
+
+        _;
+    }
+
+    /// @dev if _owner == address(0), NftVault is deployed as permissionless
+    constructor(string memory _name, string memory _symbol, address _owner) ERC20(_name, _symbol) {
         ONE = 10**decimals();
+
+        _transferOwnership(_owner);
     }
 
     /// @inheritdoc INftVault
@@ -79,6 +94,11 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
 
             emit CollectionAllowed(collection);
         }
+    }
+
+    /// @inheritdoc INftVault
+    function isPermissioned() public view returns (bool) {
+        return owner() != address(0);
     }
 
     /// @inheritdoc INftVault
@@ -160,7 +180,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         address _collection,
         uint256 _tokenId,
         uint256 _amount
-    ) public returns (uint256 amountMinted) {
+    ) public onlyAllowed returns (uint256 amountMinted) {
         if (!isTokenAllowed(_collection, _tokenId)) revert DisallowedToken();
 
         uint256 sentTokenBalance = getSentTokenBalance(_collection, _tokenId);
@@ -191,7 +211,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         address _collection,
         uint256 _tokenId,
         uint256 _amount
-    ) public returns (uint256 amountBurned) {
+    ) public onlyAllowed returns (uint256 amountBurned) {
         if (_amount == 0 || balances[_collection][_tokenId] < _amount) revert WrongAmount();
 
         balances[_collection][_tokenId] -= _amount;
@@ -242,6 +262,20 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         } else {
             revert UnsupportedNft();
         }
+    }
+
+    /// @inheritdoc INftVault
+    function allow(address _wallet) external onlyOwner {
+        allowedWallets[_wallet] = true;
+
+        emit Allowed(_wallet);
+    }
+
+    /// @inheritdoc INftVault
+    function disallow(address _wallet) external onlyOwner {
+        allowedWallets[_wallet] = false;
+
+        emit Disallowed(_wallet);
     }
 
 }

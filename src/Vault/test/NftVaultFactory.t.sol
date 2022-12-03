@@ -12,6 +12,8 @@ import "../NftVaultFactory.sol";
 contract NftVaultFactoryTest is Test {
     address user1 = address(1001);
     address user2 = address(1002);
+    address owner1 = address(1003);
+    address owner2 = address(1004);
     address erc721and1155 = address(888999);
 
     uint256[] public erc721tokenIds = [1, 6, 15, 22];
@@ -142,14 +144,37 @@ contract NftVaultFactoryTest is Test {
         return collections;
     }
 
+    function testVaultAlreadyDeployed() public {
+        NftVaultFactory vaultFactory = new NftVaultFactory();
+
+        INftVault.CollectionData[] memory _collections = _getConfig(0);
+
+        vaultFactory.createVault(_collections, address(0));
+
+        vm.expectRevert(INftVaultFactory.VaultAlreadyDeployed.selector);
+        vaultFactory.createVault(_collections, address(0));
+
+        vaultFactory.createVault(_collections, owner1);
+        vaultFactory.createVault(_collections, owner1);
+        vaultFactory.createVault(_collections, owner2);
+        vaultFactory.createVault(_collections, owner2);
+    }
+
     function testAllGetters() public {
         NftVaultFactory vaultFactory = new NftVaultFactory();
 
         address[] memory vaults = new address[](8);
+        address[] memory permissionedVaults = new address[](16);
 
         for (uint256 configId = 0; configId < 8; configId++) {
             INftVault.CollectionData[] memory _collections = _getConfig(configId);
-            INftVault vault = vaultFactory.createVault(_collections);
+
+            INftVault vault = vaultFactory.createVault(_collections, address(0));
+            assertEq(NftVault(address(vault)).owner(), address(0));
+            INftVault vault2 = vaultFactory.createVault(_collections, owner1);
+            assertEq(NftVault(address(vault2)).owner(), owner1);
+            INftVault vault3 = vaultFactory.createVault(_collections, owner2);
+            assertEq(NftVault(address(vault3)).owner(), owner2);
 
             vaults[configId] = address(vault);
 
@@ -169,6 +194,24 @@ contract NftVaultFactoryTest is Test {
             assertEq(vaultFactory.exists(_collections), true);
             assertEq(address(vaultFactory.vaultHashMap(vaultFactory.hashVault(_collections))), vaults[configId]);
             assertEq(vaultFactory.getVaultAt(vaultFactory.vaultIdMap(INftVault(vaults[configId]))), vaults[configId]);
+
+            permissionedVaults[configId * 2] = address(vault2);
+            permissionedVaults[configId * 2 + 1] = address(vault3);
+
+            address[] memory getAllPermissionedVaults = new address[](configId * 2 + 1 + 1);
+            for (uint256 i = 0; i < getAllPermissionedVaults.length; i++) {
+                if (permissionedVaults[i] != address(0)) {
+                    getAllPermissionedVaults[i] = permissionedVaults[i];
+                }
+            }
+
+            assertEq(vaultFactory.getAllPermissionedVaults(), getAllPermissionedVaults);
+            assertEq(vaultFactory.getPermissionedVaultAt(configId * 2), permissionedVaults[configId * 2]);
+            assertEq(vaultFactory.getPermissionedVaultAt(configId * 2 + 1), permissionedVaults[configId * 2 + 1]);
+            assertEq(vaultFactory.getPermissionedVaultLength(), configId * 2 + 1 + 1);
+            assertEq(vaultFactory.isPermissionedVault(permissionedVaults[configId * 2]), true);
+            assertEq(vaultFactory.isPermissionedVault(permissionedVaults[configId * 2 + 1]), true);
+            assertEq(vaultFactory.isPermissionedVault(address(uint160(permissionedVaults[configId * 2]) + 1)), false);
         }
     }
 }
