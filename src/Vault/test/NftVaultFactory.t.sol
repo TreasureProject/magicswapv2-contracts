@@ -149,15 +149,15 @@ contract NftVaultFactoryTest is Test {
 
         INftVault.CollectionData[] memory _collections = _getConfig(0);
 
-        vaultFactory.createVault(_collections, address(0));
+        vaultFactory.createVault(_collections, address(0), false);
 
         vm.expectRevert(INftVaultFactory.VaultAlreadyDeployed.selector);
-        vaultFactory.createVault(_collections, address(0));
+        vaultFactory.createVault(_collections, address(0), false);
 
-        vaultFactory.createVault(_collections, owner1);
-        vaultFactory.createVault(_collections, owner1);
-        vaultFactory.createVault(_collections, owner2);
-        vaultFactory.createVault(_collections, owner2);
+        vaultFactory.createVault(_collections, owner1, false);
+        vaultFactory.createVault(_collections, owner1, true);
+        vaultFactory.createVault(_collections, owner2, true);
+        vaultFactory.createVault(_collections, owner2, true);
     }
 
     function testAllGetters() public {
@@ -169,11 +169,11 @@ contract NftVaultFactoryTest is Test {
         for (uint256 configId = 0; configId < 8; configId++) {
             INftVault.CollectionData[] memory _collections = _getConfig(configId);
 
-            INftVault vault = vaultFactory.createVault(_collections, address(0));
+            INftVault vault = vaultFactory.createVault(_collections, address(0), false);
             assertEq(NftVault(address(vault)).owner(), address(0));
-            INftVault vault2 = vaultFactory.createVault(_collections, owner1);
+            INftVault vault2 = vaultFactory.createVault(_collections, owner1, false);
             assertEq(NftVault(address(vault2)).owner(), owner1);
-            INftVault vault3 = vaultFactory.createVault(_collections, owner2);
+            INftVault vault3 = vaultFactory.createVault(_collections, owner2, true);
             assertEq(NftVault(address(vault3)).owner(), owner2);
 
             vaults[configId] = address(vault);

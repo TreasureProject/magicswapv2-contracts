@@ -82,6 +82,8 @@ interface INftVaultFactory {
     /// @dev If vault already exists, function returned already deployed vault
     /// @param collections vault's config
     /// @param owner address of owner if vault is permissioned, otherwise address(0) and vault is permissionless
+    /// @param isSoulbound if true, Vault is soulbound and its ERC20 token can only be transfered
+    ///        to `allowedContracts` managed by `owner`
     /// @return vault address of (newly) deployed vault
-    function createVault(INftVault.CollectionData[] memory collections, address owner) external returns (INftVault vault);
+    function createVault(INftVault.CollectionData[] memory collections, address owner, bool isSoulbound) external returns (INftVault vault);
 }

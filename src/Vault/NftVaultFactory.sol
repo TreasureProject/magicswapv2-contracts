@@ -75,8 +75,12 @@ contract NftVaultFactory is INftVaultFactory {
     }
 
     /// @inheritdoc INftVaultFactory
-    function createVault(INftVault.CollectionData[] memory _collections, address _owner) external returns (INftVault vault) {
-        bool isPermissionless = _owner == address(0);
+    function createVault(
+        INftVault.CollectionData[] memory _collections,
+        address _owner,
+        bool _isSoulbound
+    ) external returns (INftVault vault) {
+        bool isPermissionless = _owner == address(0) && !_isSoulbound;
 
         bytes32 vaultHash = hashVault(_collections);
         vault = INftVault(vaultHashMap[vaultHash]);
@@ -100,7 +104,7 @@ contract NftVaultFactory is INftVaultFactory {
             symbol = string.concat("MagicPermissionedVault", vaultId.toString());
         }
 
-        vault = INftVault(address(new NftVault(name, symbol, _owner)));
+        vault = INftVault(address(new NftVault(name, symbol, _owner, _isSoulbound)));
         vault.init(_collections);
 
         if (isPermissionless) {

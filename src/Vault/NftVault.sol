@@ -10,6 +10,7 @@ import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableMap.sol";
 import "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165Checker.sol";
 import "lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
+import "lib/openzeppelin-contracts/contracts/utils/Address.sol";
 
 import "./INftVault.sol";
 import "./INftVaultFactory.sol";
@@ -20,6 +21,10 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder, Ownable2Step
 
     /// @notice value of 1 token, including decimals
     uint256 public immutable ONE;
+
+    /// @notice if Vault is soulbound, its ERC20 token can only be transfered to
+    ///         EOA, vault itself and `allowedContracts`
+    bool public immutable isSoulbound;
 
     /// @notice unique it of the vault geenrated using its configuration
     bytes32 public VAULT_HASH;
@@ -36,6 +41,10 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder, Ownable2Step
     /// @notice deposit/withdraw allow list. Maps wallet address to bool, if true, wallet is allwed to deposit/withdraw
     mapping(address => bool) public allowedWallets;
 
+    /// @notice Vault ERC20 receive allow list. Maps contract address to bool, if true, contract is allwed to receive
+    ///         Vault ERC20 token.
+    mapping(address => bool) public allowedContracts;
+
     modifier onlyAllowed() {
         if (isPermissioned() && !allowedWallets[msg.sender]) {
             revert NotAllowed();
@@ -45,10 +54,17 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder, Ownable2Step
     }
 
     /// @dev if _owner == address(0), NftVault is deployed as permissionless
-    constructor(string memory _name, string memory _symbol, address _owner) ERC20(_name, _symbol) {
+    /// @param _name name of ERC20 Vault token
+    /// @param _symbol symbol of ERC20 Vault token
+    /// @param _owner should be address(0) for permissionless vaults. Otherwise, address of the owner.
+    /// @param _isSoulbound if true, Vault is soulbound, false otherwise
+    constructor(string memory _name, string memory _symbol, address _owner, bool _isSoulbound) ERC20(_name, _symbol) {
         ONE = 10**decimals();
 
+        isSoulbound = _isSoulbound;
         _transferOwnership(_owner);
+
+        if (_isSoulbound && _owner == address(0)) revert OwnerRequiredForSoulbound();
     }
 
     /// @inheritdoc INftVault
@@ -264,18 +280,45 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder, Ownable2Step
         }
     }
 
+    function _beforeTokenTransfer(
+        address /*from*/,
+        address to,
+        uint256 /*amount*/
+    ) internal view override {
+        /// @dev Soulbound Vault ERC20 token can be transfered to any EOA, this Vault or `allowedContracts`
+        if (
+            isSoulbound
+            && to != address(this)
+            && Address.isContract(to)
+            && !allowedContracts[to]
+        ) revert SoulboundTransferDisallowed();
+    }
+
     /// @inheritdoc INftVault
-    function allow(address _wallet) external onlyOwner {
+    function allowDepositWithdraw(address _wallet) external onlyOwner {
         allowedWallets[_wallet] = true;
 
-        emit Allowed(_wallet);
+        emit AllowedDepositWithdraw(_wallet);
     }
 
     /// @inheritdoc INftVault
-    function disallow(address _wallet) external onlyOwner {
+    function disallowDepositWithdraw(address _wallet) external onlyOwner {
         allowedWallets[_wallet] = false;
 
-        emit Disallowed(_wallet);
+        emit DisallowedDepositWithdraw(_wallet);
     }
 
+    /// @inheritdoc INftVault
+    function allowVaultTokenTransfersTo(address _contractAddress) external onlyOwner {
+        allowedContracts[_contractAddress] = true;
+
+        emit AllowedContract(_contractAddress);
+    }
+
+    /// @inheritdoc INftVault
+    function disallowVaultTokenTransfersTo(address _contractAddress) external onlyOwner {
+        allowedContracts[_contractAddress] = false;
+
+        emit DisallowedContract(_contractAddress);
+    }
 }
