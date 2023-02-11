@@ -63,7 +63,7 @@ contract MagicSwapV2RouterTest is Test {
         });
 
         collections1.push(collectionERC721all);
-        vault1 = nftVaultFactory.createVault(collections1, address(0), false);
+        vault1 = nftVaultFactory.createVault(collections1);
         nft1 = ERC721Mintable(collectionERC721all.addr);
 
         collectionERC1155all = INftVault.CollectionData({
@@ -75,7 +75,7 @@ contract MagicSwapV2RouterTest is Test {
 
         collections2.push(collectionERC721all);
         collections2.push(collectionERC1155all);
-        vault2 = nftVaultFactory.createVault(collections2, address(0), false);
+        vault2 = nftVaultFactory.createVault(collections2);
         nft2 = ERC1155Mintable(collectionERC1155all.addr);
 
         ONE = vault1.ONE();

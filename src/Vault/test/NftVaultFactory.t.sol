@@ -149,32 +149,21 @@ contract NftVaultFactoryTest is Test {
 
         INftVault.CollectionData[] memory _collections = _getConfig(0);
 
-        vaultFactory.createVault(_collections, address(0), false);
+        vaultFactory.createVault(_collections);
 
         vm.expectRevert(INftVaultFactory.VaultAlreadyDeployed.selector);
-        vaultFactory.createVault(_collections, address(0), false);
-
-        vaultFactory.createVault(_collections, owner1, false);
-        vaultFactory.createVault(_collections, owner1, true);
-        vaultFactory.createVault(_collections, owner2, true);
-        vaultFactory.createVault(_collections, owner2, true);
+        vaultFactory.createVault(_collections);
     }
 
     function testAllGetters() public {
         NftVaultFactory vaultFactory = new NftVaultFactory();
 
         address[] memory vaults = new address[](8);
-        address[] memory permissionedVaults = new address[](16);
 
         for (uint256 configId = 0; configId < 8; configId++) {
             INftVault.CollectionData[] memory _collections = _getConfig(configId);
 
-            INftVault vault = vaultFactory.createVault(_collections, address(0), false);
-            assertEq(NftVault(address(vault)).owner(), address(0));
-            INftVault vault2 = vaultFactory.createVault(_collections, owner1, false);
-            assertEq(NftVault(address(vault2)).owner(), owner1);
-            INftVault vault3 = vaultFactory.createVault(_collections, owner2, true);
-            assertEq(NftVault(address(vault3)).owner(), owner2);
+            INftVault vault = vaultFactory.createVault(_collections);
 
             vaults[configId] = address(vault);
 
@@ -195,23 +184,6 @@ contract NftVaultFactoryTest is Test {
             assertEq(address(vaultFactory.vaultHashMap(vaultFactory.hashVault(_collections))), vaults[configId]);
             assertEq(vaultFactory.getVaultAt(vaultFactory.vaultIdMap(INftVault(vaults[configId]))), vaults[configId]);
 
-            permissionedVaults[configId * 2] = address(vault2);
-            permissionedVaults[configId * 2 + 1] = address(vault3);
-
-            address[] memory getAllPermissionedVaults = new address[](configId * 2 + 1 + 1);
-            for (uint256 i = 0; i < getAllPermissionedVaults.length; i++) {
-                if (permissionedVaults[i] != address(0)) {
-                    getAllPermissionedVaults[i] = permissionedVaults[i];
-                }
-            }
-
-            assertEq(vaultFactory.getAllPermissionedVaults(), getAllPermissionedVaults);
-            assertEq(vaultFactory.getPermissionedVaultAt(configId * 2), permissionedVaults[configId * 2]);
-            assertEq(vaultFactory.getPermissionedVaultAt(configId * 2 + 1), permissionedVaults[configId * 2 + 1]);
-            assertEq(vaultFactory.getPermissionedVaultLength(), configId * 2 + 1 + 1);
-            assertEq(vaultFactory.isPermissionedVault(permissionedVaults[configId * 2]), true);
-            assertEq(vaultFactory.isPermissionedVault(permissionedVaults[configId * 2 + 1]), true);
-            assertEq(vaultFactory.isPermissionedVault(address(uint160(permissionedVaults[configId * 2]) + 1)), false);
         }
     }
 }
