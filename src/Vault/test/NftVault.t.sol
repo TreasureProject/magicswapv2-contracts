@@ -788,6 +788,57 @@ contract NftVaultTest is Test {
         assertEq(ERC1155Mintable(_collections[1].addr).balanceOf(address(nftVault), _tokenId), 0);
     }
 
+    function testWithdrawLast(uint256 _tokenId, uint256 _amount) public {
+        vm.assume(_amount > 1);
+        vm.assume(_amount < type(uint128).max);
+
+        INftVault.CollectionData[] memory _collections = _getConfig(4);
+        NftVault nftVault = NftVault(address(nftVaultFactory.createVault(_collections, address(0), false)));
+
+        ERC721Mintable(collections[0].addr).mint(address(nftVault), _tokenId);
+        ERC1155Mintable(collections[1].addr).mint(address(nftVault), _tokenId, _amount);
+
+        address[] memory lastCollections = new address[](2);
+        uint256[] memory lastTokenIds = new uint256[](2);
+        uint256[] memory lastAmounts = new uint256[](2);
+
+        lastCollections[0] = collections[0].addr;
+        lastCollections[1] = collections[1].addr;
+
+        lastTokenIds[0] = _tokenId;
+        lastTokenIds[1] = _tokenId;
+
+        lastAmounts[0] = 1;
+        lastAmounts[1] = _amount;
+
+        uint256 amountMinted = nftVault.depositBatch(
+            user1,
+            lastCollections,
+            lastTokenIds,
+            lastAmounts
+        );
+
+        assertEq(amountMinted, (_amount + 1) * nftVault.ONE());
+        assertEq(nftVault.balanceOf(user1), amountMinted);
+
+        vm.startPrank(user1);
+        nftVault.transfer(owner, nftVault.UNIV2_MINIMUM_LIQUIDITY());
+        nftVault.transfer(address(nftVault), nftVault.balanceOf(user1));
+        vm.stopPrank();
+
+        nftVault.withdrawBatch(
+            user1,
+            lastCollections,
+            lastTokenIds,
+            lastAmounts
+        );
+
+        assertEq(ERC721Mintable(collections[0].addr).ownerOf(_tokenId), user1);
+        assertEq(ERC1155Mintable(collections[1].addr).balanceOf(user1, _tokenId), _amount);
+        assertEq(nftVault.balanceOf(user1), 0);
+        assertEq(nftVault.balanceOf(address(nftVault)), 0);
+    }
+
     function testSkim(uint256 tokenId, uint256 amount) public {
         delete collections;
         collections.push(collectionERC721all);

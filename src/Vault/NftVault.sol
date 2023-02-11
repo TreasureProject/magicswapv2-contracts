@@ -22,6 +22,9 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder, Ownable2Step
     /// @notice value of 1 token, including decimals
     uint256 public immutable ONE;
 
+    /// @notice minimum liquidity that is frozen in UniV2 pool
+    uint256 public constant UNIV2_MINIMUM_LIQUIDITY = 1e3;
+
     /// @notice if Vault is soulbound, its ERC20 token can only be transfered to
     ///         EOA, vault itself and `allowedContracts`
     bool public immutable isSoulbound;
@@ -232,6 +235,12 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder, Ownable2Step
 
         balances[_collection][_tokenId] -= _amount;
         amountBurned = ONE * _amount;
+
+        // when withdrawing the last NFT from the vault, allow being UNIV2_MINIMUM_LIQUIDITY shy
+        if (totalSupply() == amountBurned && balanceOf(address(this)) == amountBurned - UNIV2_MINIMUM_LIQUIDITY) {
+            amountBurned -= UNIV2_MINIMUM_LIQUIDITY;
+        }
+
         _burn(address(this), amountBurned);
 
         NftType nftType = NftType(allowedCollections.get(_collection));
