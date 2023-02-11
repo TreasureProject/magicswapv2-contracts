@@ -6,6 +6,9 @@ import "../Vault/INftVault.sol";
 
 /// @title Router contract for swapping, managing liquidity and interacting with vaults
 interface IMagicSwapV2Router is IUniswapV2Router02 {
+     /// @dev Amounts does not match
+    error WrongAmounts();
+
     /// @notice Deposit NFTs to vault
     /// @dev All NFTs must be approved for transfer. `_collection`, `_tokenId`
     ///      and `_amount` must be of the same length.

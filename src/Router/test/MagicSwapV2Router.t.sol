@@ -226,8 +226,22 @@ contract MagicSwapV2RouterTest is Test {
         _checkNftBalances(_collection1, _tokenId1, _amount1, user3);
 
         // withdraw 2
+
+        collectionArray = [address(nft1), address(nft1), address(nft2)];
+        tokenIdArray = [_tokenId++, _tokenId++, _tokenId++, _tokenId++];
+        (address[] memory _collection3,,) = _mintTokens(user2);
+
         vm.startPrank(user2);
         IERC20(address(vault2)).approve(address(magicSwapV2Router), magicSwapV2Router.nftAmountToERC20(_amount2));
+
+        vm.expectRevert(IMagicSwapV2Router.WrongAmounts.selector);
+        magicSwapV2Router.withdrawVault(
+            _collection3,
+            _tokenId2,
+            _amount2,
+            vault2,
+            user4
+        );
 
         uint256 amountBurned2 = magicSwapV2Router.withdrawVault(
             _collection2,

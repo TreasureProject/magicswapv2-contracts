@@ -72,6 +72,8 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
 
         IERC20(address(_vault)).transferFrom(_from, address(_vault), amountToBurn);
         amountBurned = _vault.withdrawBatch(_to, _collection, _tokenId, _amount);
+
+        if (amountToBurn != amountBurned) revert WrongAmounts();
     }
 
     /// @inheritdoc IMagicSwapV2Router
