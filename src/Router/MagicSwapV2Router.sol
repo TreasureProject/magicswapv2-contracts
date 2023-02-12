@@ -406,10 +406,10 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         if (_amountIn == 0) return 0;
 
         address[] memory path = new address[](2);
-        path[0] = address(_tokenA);
+        path[0] = _tokenA;
         path[1] = _tokenB;
 
-        _approveIfNeeded(address(_tokenA), _amountIn);
+        _approveIfNeeded(_tokenA, _amountIn);
 
         // swap leftover to tokenB
         // TODO: can be front-run, issue?
