@@ -24,6 +24,11 @@ contract UniswapV2FactoryTest is Test {
     uint256 MAX_FEE;
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event DefaultFeesSet(IUniswapV2Factory.DefaultFees fees);
+    event LpFeesSet(address indexed pair, uint256 lpFee, bool overrideFee);
+    event RoyaltiesFeesSet(address indexed pair, address beneficiary, uint256 royaltiesFee);
+    event ProtocolFeesSet(address indexed pair, uint256 protocolFee, bool overrideFee);
+    event ProtocolFeeBeneficiarySet(address beneficiary);
 
     function setUp() public {
         vm.prank(owner);
@@ -83,22 +88,19 @@ contract UniswapV2FactoryTest is Test {
 
         _assertFees(pool1, address(0), 0, 0, 0, protocolFeeBeneficiary);
 
+        IUniswapV2Factory.DefaultFees memory fees = IUniswapV2Factory.DefaultFees({
+            protocolFee: _protocolFee,
+            lpFee: _lpFee
+        });
+
         vm.prank(hacker);
         vm.expectRevert("Ownable: caller is not the owner");
-        factory.setDefaultFees(
-            IUniswapV2Factory.DefaultFees({
-                protocolFee: _protocolFee,
-                lpFee: _lpFee
-            })
-        );
+        factory.setDefaultFees(fees);
 
         vm.prank(owner);
-        factory.setDefaultFees(
-            IUniswapV2Factory.DefaultFees({
-                protocolFee: _protocolFee,
-                lpFee: _lpFee
-            })
-        );
+        vm.expectEmit(true, true, true, true);
+        emit DefaultFeesSet(fees);
+        factory.setDefaultFees(fees);
 
         (
             protocolFee,
@@ -156,6 +158,8 @@ contract UniswapV2FactoryTest is Test {
         _pair = _createPair(_tokenA, _tokenB);
 
         vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit LpFeesSet(_pair, _lpFee, true);
         factory.setLpFee(_pair, _lpFee, true);
 
         (
@@ -209,6 +213,8 @@ contract UniswapV2FactoryTest is Test {
         factory.setRoyaltiesFee(_pair, address(0), _royaltiesFee);
 
         vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit RoyaltiesFeesSet(_pair, _royaltiesBeneficiary, _royaltiesFee);
         factory.setRoyaltiesFee(_pair, _royaltiesBeneficiary, _royaltiesFee);
 
         (
@@ -253,6 +259,8 @@ contract UniswapV2FactoryTest is Test {
         _pair = _createPair(_tokenA, _tokenB);
 
         vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit ProtocolFeesSet(_pair, _protocolFee, true);
         factory.setProtocolFee(_pair, _protocolFee, true);
 
         (
@@ -286,6 +294,8 @@ contract UniswapV2FactoryTest is Test {
         factory.setProtocolFeeBeneficiary(_beneficiary);
 
         vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit ProtocolFeeBeneficiarySet(_beneficiary);
         factory.setProtocolFeeBeneficiary(_beneficiary);
 
         assertEq(factory.protocolFeeBeneficiary(), _beneficiary);

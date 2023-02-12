@@ -98,7 +98,10 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
         require(_fees.protocolFee <= MAX_FEE, 'MagicswapV2: protocolFee > MAX_FEE');
         require(_fees.lpFee <= MAX_FEE, 'MagicswapV2: lpFee > MAX_FEE');
         require(_fees.protocolFee + _fees.lpFee <= MAX_FEE, 'MagicswapV2: protocolFee + lpFee > MAX_FEE');
+
         defaultFees = _fees;
+
+        emit DefaultFeesSet(_fees);
     }
 
     /// @inheritdoc IUniswapV2Factory
@@ -108,6 +111,8 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
 
         pairFees[_pair].lpFee = _lpFee;
         pairFees[_pair].lpFeeOverride = _overrideFee;
+
+        emit LpFeesSet(_pair, _lpFee, _overrideFee);
     }
 
     /// @inheritdoc IUniswapV2Factory
@@ -118,6 +123,8 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
 
         pairFees[_pair].royaltiesBeneficiary = _beneficiary;
         pairFees[_pair].royaltiesFee = _royaltiesFee;
+
+        emit RoyaltiesFeesSet(_pair, _beneficiary, _royaltiesFee);
     }
 
     /// @inheritdoc IUniswapV2Factory
@@ -127,12 +134,16 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
 
         pairFees[_pair].protocolFee = _protocolFee;
         pairFees[_pair].protocolFeeOverride = _overrideFee;
+
+        emit ProtocolFeesSet(_pair, _protocolFee, _overrideFee);
     }
 
     /// @inheritdoc IUniswapV2Factory
     function setProtocolFeeBeneficiary(address _beneficiary) public onlyOwner {
         require(_beneficiary != address(0), 'MagicswapV2: BENEFICIARY');
         protocolFeeBeneficiary = _beneficiary;
+
+        emit ProtocolFeeBeneficiarySet(_beneficiary);
     }
 
     function _getLpFee(address _pair) internal view returns (uint256 lpFee) {

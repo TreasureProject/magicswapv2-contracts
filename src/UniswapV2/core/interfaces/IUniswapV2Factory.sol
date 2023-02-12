@@ -24,6 +24,11 @@ interface IUniswapV2Factory {
     }
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event DefaultFeesSet(DefaultFees fees);
+    event LpFeesSet(address indexed pair, uint256 lpFee, bool overrideFee);
+    event RoyaltiesFeesSet(address indexed pair, address beneficiary, uint256 royaltiesFee);
+    event ProtocolFeesSet(address indexed pair, uint256 protocolFee, bool overrideFee);
+    event ProtocolFeeBeneficiarySet(address beneficiary);
 
     /// @notice Returns total fee pair charges
     /// @dev Fee is capped at MAX_FEE
