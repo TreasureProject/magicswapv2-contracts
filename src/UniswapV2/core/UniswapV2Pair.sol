@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.17;
 
-import "lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 import './interfaces/IUniswapV2Pair.sol';
@@ -9,14 +8,12 @@ import './interfaces/IUniswapV2Callee.sol';
 import './interfaces/IUniswapV2Factory.sol';
 
 import './libraries/UniswapV2Math.sol';
-import './libraries/UQ112x112.sol';
 import './libraries/Oracle.sol';
 
 import './UniswapV2ERC20.sol';
 
 contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     using SafeMath  for uint;
-    using UQ112x112 for uint224;
     using Oracle for Oracle.Observation[65535];
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;

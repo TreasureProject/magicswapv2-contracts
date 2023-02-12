@@ -2,7 +2,6 @@
 pragma solidity >=0.8.17;
 
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
-import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 import "./INftVaultFactory.sol";

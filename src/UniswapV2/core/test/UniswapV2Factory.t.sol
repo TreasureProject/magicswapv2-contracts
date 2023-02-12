@@ -212,6 +212,8 @@ contract UniswapV2FactoryTest is Test {
         vm.expectRevert("MagicswapV2: _beneficiary invalid");
         factory.setRoyaltiesFee(_pair, address(0), _royaltiesFee);
 
+        vm.assume(_royaltiesBeneficiary != address(0));
+
         vm.prank(owner);
         vm.expectEmit(true, true, true, true);
         emit RoyaltiesFeesSet(_pair, _royaltiesBeneficiary, _royaltiesFee);
