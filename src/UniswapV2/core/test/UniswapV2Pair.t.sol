@@ -16,8 +16,8 @@ contract UniswapV2PairTest is Test {
     UniswapV2PairOriginal pairOriginal;
     UniswapV2Factory factory;
 
-    ERC20Mintable token0 = new ERC20Mintable();
-    ERC20Mintable token1 = new ERC20Mintable();
+    ERC20Mintable token0;
+    ERC20Mintable token1;
 
     address user1 = address(10000001);
     address user2 = address(10000002);
@@ -31,6 +31,12 @@ contract UniswapV2PairTest is Test {
     uint256 protocolFee = 50;
 
     function setUp() public {
+        address tokenA = address(new ERC20Mintable());
+        address tokenB = address(new ERC20Mintable());
+        (tokenA, tokenB) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        token0 = ERC20Mintable(tokenA);
+        token1 = ERC20Mintable(tokenB);
+
         factory = new UniswapV2Factory(0, 30, protocolFeeBeneficiary);
 
         vm.startPrank(address(factory));
@@ -41,13 +47,12 @@ contract UniswapV2PairTest is Test {
         pairOriginal = new UniswapV2PairOriginal();
         pairOriginal.initialize(address(token0), address(token1));
 
-        pairWithFees = new UniswapV2Pair();
-        pairWithFees.initialize(address(token0), address(token1));
+        pairWithFees = UniswapV2Pair(factory.createPair(address(token0), address(token1)));
 
         vm.stopPrank();
 
         factory.setRoyaltiesFee(address(pairWithFees), royaltiesBeneficiary, royaltiesFee);
-        factory.setProtocolFee(address(pairWithFees), protocolFee);
+        factory.setProtocolFee(address(pairWithFees), protocolFee, true);
         factory.setProtocolFeeBeneficiary(protocolFeeBeneficiary);
     }
 

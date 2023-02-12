@@ -2,6 +2,13 @@
 pragma solidity >=0.8.17;
 
 interface IUniswapV2Factory {
+    struct DefaultFees {
+        /// @dev in basis point, denominated by 10000
+        uint256 protocolFee;
+        /// @dev in basis point, denominated by 10000
+        uint256 lpFee;
+    }
+
     struct Fees {
         address royaltiesBeneficiary;
         /// @dev in basis point, denominated by 10000
@@ -10,6 +17,10 @@ interface IUniswapV2Factory {
         uint256 protocolFee;
         /// @dev in basis point, denominated by 10000
         uint256 lpFee;
+        /// @dev if true, Fees.protocolFee is used even if set to 0
+        bool protocolFeeOverride;
+        /// @dev if true, Fees.lpFee is used even if set to 0
+        bool lpFeeOverride;
     }
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
@@ -59,9 +70,10 @@ interface IUniswapV2Factory {
 
     /// @notice Internal mapping to store fees for pair. It is exposed for advanced integrations
     ///         and in most cases contracts should use fee getters.
-    function pairFees(address pair) external view returns (address, uint256, uint256, uint256);
+    function pairFees(address pair) external view returns (address, uint256, uint256, uint256, bool, bool);
 
     function getPair(address tokenA, address tokenB) external view returns (address pair);
+    function allPairs() external view returns (address[] memory pairs);
     function allPairs(uint) external view returns (address pair);
     function allPairsLength() external view returns (uint);
 
@@ -69,7 +81,7 @@ interface IUniswapV2Factory {
 
     /// @notice Sets default fees for all pairs
     /// @param fees struct with default fees
-    function setDefaultFees(Fees memory fees) external;
+    function setDefaultFees(DefaultFees memory fees) external;
 
     /// @notice Sets royalties fee and beneficiary for pair
     /// @param pair address of pair for which to set fee
@@ -80,12 +92,14 @@ interface IUniswapV2Factory {
     /// @notice Sets protocol fee for pair
     /// @param pair address of pair for which to set fee
     /// @param protocolFee amount of protocol fee denominated in basis points
-    function setProtocolFee(address pair, uint256 protocolFee) external;
+    /// @param overrideFee if true, fee will be overriden even if set to 0
+    function setProtocolFee(address pair, uint256 protocolFee, bool overrideFee) external;
 
     /// @notice Sets lp fee for pair
     /// @param pair address of pair for which to set fee
     /// @param lpFee amount of lp fee denominated in basis points
-    function setLpFee(address pair, uint256 lpFee) external;
+    /// @param overrideFee if true, fee will be overriden even if set to 0
+    function setLpFee(address pair, uint256 lpFee, bool overrideFee) external;
 
     /// @notice Sets protocol fee beneficiary
     /// @param _beneficiary address that gets protocol fees
