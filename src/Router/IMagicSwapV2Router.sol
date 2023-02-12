@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "../UniswapV2/periphery/interfaces/IUniswapV2Router02.sol";
 import "../Vault/INftVault.sol";
 
 /// @title Router contract for swapping, managing liquidity and interacting with vaults
 interface IMagicSwapV2Router is IUniswapV2Router02 {
-     /// @dev Amounts does not match
+    /// @dev Amounts does not match
     error WrongAmounts();
 
     /// @notice Deposit NFTs to vault
@@ -265,9 +265,7 @@ interface IMagicSwapV2Router is IUniswapV2Router02 {
     /// @param _tokenB address of token to swap to
     /// @param _amountIn input amount of `_tokenA`
     /// @return amountOut output amount of swapped `_tokenB`
-    function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn)
-        external
-        returns (uint256 amountOut);
+    function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn) external returns (uint256 amountOut);
 
     /// @notice Transition number of NFTs into amount of ERC20
     function nftAmountToERC20(uint256[] memory _amount) external pure returns (uint256 amount);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
@@ -53,10 +53,7 @@ contract NftVaultFactory is INftVaultFactory {
     }
 
     /// @inheritdoc INftVaultFactory
-    function createVault(INftVault.CollectionData[] memory _collections)
-        external
-        returns (INftVault vault)
-    {
+    function createVault(INftVault.CollectionData[] memory _collections) external returns (INftVault vault) {
         bytes32 vaultHash = hashVault(_collections);
         vault = INftVault(vaultHashMap[vaultHash]);
 

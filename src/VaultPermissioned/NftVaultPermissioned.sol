@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
@@ -62,7 +62,7 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
     /// @param _owner should be address(0) for permissionless vaults. Otherwise, address of the owner.
     /// @param _isSoulbound if true, Vault is soulbound, false otherwise
     constructor(string memory _name, string memory _symbol, address _owner, bool _isSoulbound) ERC20(_name, _symbol) {
-        ONE = 10**decimals();
+        ONE = 10 ** decimals();
 
         isSoulbound = _isSoulbound;
         _transferOwnership(_owner);
@@ -130,8 +130,8 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
         collections = new address[](allowedCollections.length());
 
         for (uint256 i = 0; i < collections.length; i++) {
-             (address addr,) = allowedCollections.at(i);
-             collections[i] = addr;
+            (address addr,) = allowedCollections.at(i);
+            collections[i] = addr;
         }
     }
 
@@ -167,12 +167,8 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
     function isTokenAllowed(address _collection, uint256 _tokenId) public view returns (bool) {
         (bool isCollectionAllowed,) = allowedCollections.tryGet(_collection);
 
-        return
-            isCollectionAllowed &&
-            (
-                allowedTokenIds[_collection].allowAllIds ||
-                allowedTokenIds[_collection].tokenIds[_tokenId]
-            );
+        return isCollectionAllowed
+            && (allowedTokenIds[_collection].allowAllIds || allowedTokenIds[_collection].tokenIds[_tokenId]);
     }
 
     /// @inheritdoc INftVaultPermissioned
@@ -194,12 +190,11 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
     }
 
     /// @inheritdoc INftVaultPermissioned
-    function deposit(
-        address _to,
-        address _collection,
-        uint256 _tokenId,
-        uint256 _amount
-    ) public onlyAllowed returns (uint256 amountMinted) {
+    function deposit(address _to, address _collection, uint256 _tokenId, uint256 _amount)
+        public
+        onlyAllowed
+        returns (uint256 amountMinted)
+    {
         if (!isTokenAllowed(_collection, _tokenId)) revert DisallowedToken();
 
         uint256 sentTokenBalance = getSentTokenBalance(_collection, _tokenId);
@@ -225,12 +220,11 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
     }
 
     /// @inheritdoc INftVaultPermissioned
-    function withdraw(
-        address _to,
-        address _collection,
-        uint256 _tokenId,
-        uint256 _amount
-    ) public onlyAllowed returns (uint256 amountBurned) {
+    function withdraw(address _to, address _collection, uint256 _tokenId, uint256 _amount)
+        public
+        onlyAllowed
+        returns (uint256 amountBurned)
+    {
         if (_amount == 0 || balances[_collection][_tokenId] < _amount) revert WrongAmount();
 
         balances[_collection][_tokenId] -= _amount;
@@ -270,13 +264,7 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
     }
 
     /// @inheritdoc INftVaultPermissioned
-    function skim(
-        address _to,
-        NftType nftType,
-        address _collection,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external {
+    function skim(address _to, NftType nftType, address _collection, uint256 _tokenId, uint256 _amount) external {
         // Cannot skim supported token
         if (isTokenAllowed(_collection, _tokenId)) revert MustBeDisallowedToken();
 
@@ -289,18 +277,11 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
         }
     }
 
-    function _beforeTokenTransfer(
-        address /*from*/,
-        address to,
-        uint256 /*amount*/
-    ) internal view override {
+    function _beforeTokenTransfer(address, /*from*/ address to, uint256 /*amount*/ ) internal view override {
         /// @dev Soulbound Vault ERC20 token can be transfered to any EOA, this Vault or `allowedContracts`
-        if (
-            isSoulbound
-            && to != address(this)
-            && Address.isContract(to)
-            && !allowedContracts[to]
-        ) revert SoulboundTransferDisallowed();
+        if (isSoulbound && to != address(this) && Address.isContract(to) && !allowedContracts[to]) {
+            revert SoulboundTransferDisallowed();
+        }
     }
 
     /// @inheritdoc INftVaultPermissioned

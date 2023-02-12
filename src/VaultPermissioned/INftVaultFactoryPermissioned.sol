@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "./INftVaultPermissioned.sol";
 
@@ -66,7 +66,10 @@ interface INftVaultFactoryPermissioned {
     /// @notice Get vault by it's config
     /// @param collections vault's config
     /// @return vault address
-    function getVault(INftVaultPermissioned.CollectionData[] memory collections) external view returns (INftVaultPermissioned vault);
+    function getVault(INftVaultPermissioned.CollectionData[] memory collections)
+        external
+        view
+        returns (INftVaultPermissioned vault);
 
     /// @notice Returns true if vault with given config exists
     /// @param collections vault's config
@@ -85,5 +88,7 @@ interface INftVaultFactoryPermissioned {
     /// @param isSoulbound if true, Vault is soulbound and its ERC20 token can only be transfered
     ///        to `allowedContracts` managed by `owner`
     /// @return vault address of (newly) deployed vault
-    function createVault(INftVaultPermissioned.CollectionData[] memory collections, address owner, bool isSoulbound) external returns (INftVaultPermissioned vault);
+    function createVault(INftVaultPermissioned.CollectionData[] memory collections, address owner, bool isSoulbound)
+        external
+        returns (INftVaultPermissioned vault);
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 import "forge-std/Test.sol";
 
@@ -73,7 +73,10 @@ contract UniswapV2PairTest is Test {
         assertEq(token1.balanceOf(address(_pair)), token1.balanceOf(address(_pairOriginal)));
     }
 
-    function _addLiquidity(address _pair, uint256 _amount0, uint256 _amount1, address _to) public returns (uint256 liquidity) {
+    function _addLiquidity(address _pair, uint256 _amount0, uint256 _amount1, address _to)
+        public
+        returns (uint256 liquidity)
+    {
         token0.mint(_pair, _amount0);
         token1.mint(_pair, _amount1);
 
@@ -108,7 +111,10 @@ contract UniswapV2PairTest is Test {
         _assertPairs(pair, pairOriginal);
     }
 
-    function _swap(address _pair, uint256 _amount0In, uint256 _amount1In, address _to) public returns (uint256 amountOut) {
+    function _swap(address _pair, uint256 _amount0In, uint256 _amount1In, address _to)
+        public
+        returns (uint256 amountOut)
+    {
         (uint112 reserve0, uint112 reserve1,) = UniswapV2Pair(_pair).getReserves();
         if (_amount0In > 0) {
             uint256 amount1Out = UniswapV2Library.getAmountOut(_amount0In, reserve0, reserve1, _pair, address(factory));
@@ -234,13 +240,8 @@ contract UniswapV2PairTest is Test {
         assertEq(token0.balanceOf(user1), 0);
         assertEq(token1.balanceOf(user1), 0);
 
-        (
-            ,
-            address beneficiary,
-            uint256 royalties,
-            address protocolBeneficiary,
-            uint256 protocolBeneficiaryFee
-        ) = factory.getFeesAndRecipients(address(pairWithFees));
+        (, address beneficiary, uint256 royalties, address protocolBeneficiary, uint256 protocolBeneficiaryFee) =
+            factory.getFeesAndRecipients(address(pairWithFees));
 
         assertEq(beneficiary, royaltiesBeneficiary);
         assertEq(royalties, royaltiesFee);

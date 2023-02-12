@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 interface IUniswapV2Factory {
     struct DefaultFees {
@@ -23,7 +23,7 @@ interface IUniswapV2Factory {
         bool lpFeeOverride;
     }
 
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
     event DefaultFeesSet(DefaultFees fees);
     event LpFeesSet(address indexed pair, uint256 lpFee, bool overrideFee);
     event RoyaltiesFeesSet(address indexed pair, address beneficiary, uint256 royaltiesFee);
@@ -40,10 +40,7 @@ interface IUniswapV2Factory {
     /// @return lpFee fee changed by liquidity providers, denominated in basis points
     /// @return royaltiesFee royalties paid to NFT creators, denominated in basis points
     /// @return protocolFee fee paid to the protocol, denominated in basis points
-    function getFees(address _pair)
-        external
-        view
-        returns (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee);
+    function getFees(address _pair) external view returns (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee);
 
     /// @notice Returns all fees for pair and beneficiaries
     /// @dev Fees are capped by MAX_FEE, however it is possible for a malicious owner
@@ -62,13 +59,16 @@ interface IUniswapV2Factory {
     /// @return royaltiesFee royalties paid to NFT creators, denominated in basis points
     /// @return protocolBeneficiary address that gets protocol fees
     /// @return protocolFee fee paid to the protocol, denominated in basis points
-    function getFeesAndRecipients(address pair) external view returns (
-        uint256 lpFee,
-        address royaltiesBeneficiary,
-        uint256 royaltiesFee,
-        address protocolBeneficiary,
-        uint256 protocolFee
-    );
+    function getFeesAndRecipients(address pair)
+        external
+        view
+        returns (
+            uint256 lpFee,
+            address royaltiesBeneficiary,
+            uint256 royaltiesFee,
+            address protocolBeneficiary,
+            uint256 protocolFee
+        );
 
     /// @return protocolFeeBeneficiary address that gets protocol fees
     function protocolFeeBeneficiary() external view returns (address protocolFeeBeneficiary);
@@ -79,8 +79,8 @@ interface IUniswapV2Factory {
 
     function getPair(address tokenA, address tokenB) external view returns (address pair);
     function allPairs() external view returns (address[] memory pairs);
-    function allPairs(uint) external view returns (address pair);
-    function allPairsLength() external view returns (uint);
+    function allPairs(uint256) external view returns (address pair);
+    function allPairsLength() external view returns (uint256);
 
     function createPair(address tokenA, address tokenB) external returns (address pair);
 

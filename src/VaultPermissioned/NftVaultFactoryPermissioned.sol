@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
@@ -59,7 +59,11 @@ contract NftVaultFactoryPermissioned is INftVaultFactoryPermissioned {
     }
 
     /// @inheritdoc INftVaultFactoryPermissioned
-    function getVault(INftVaultPermissioned.CollectionData[] memory _collections) public view returns (INftVaultPermissioned vault) {
+    function getVault(INftVaultPermissioned.CollectionData[] memory _collections)
+        public
+        view
+        returns (INftVaultPermissioned vault)
+    {
         vault = vaultHashMap[hashVault(_collections)];
         if (address(vault) == address(0)) revert VaultDoesNotExist();
     }
@@ -75,11 +79,10 @@ contract NftVaultFactoryPermissioned is INftVaultFactoryPermissioned {
     }
 
     /// @inheritdoc INftVaultFactoryPermissioned
-    function createVault(
-        INftVaultPermissioned.CollectionData[] memory _collections,
-        address _owner,
-        bool _isSoulbound
-    ) external returns (INftVaultPermissioned vault) {
+    function createVault(INftVaultPermissioned.CollectionData[] memory _collections, address _owner, bool _isSoulbound)
+        external
+        returns (INftVaultPermissioned vault)
+    {
         bool isPermissionless = _owner == address(0) && !_isSoulbound;
 
         bytes32 vaultHash = hashVault(_collections);

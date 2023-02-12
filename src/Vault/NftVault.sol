@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
@@ -39,7 +39,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     /// @param _name name of ERC20 Vault token
     /// @param _symbol symbol of ERC20 Vault token
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {
-        ONE = 10**decimals();
+        ONE = 10 ** decimals();
     }
 
     /// @inheritdoc INftVault
@@ -97,8 +97,8 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         collections = new address[](allowedCollections.length());
 
         for (uint256 i = 0; i < collections.length; i++) {
-             (address addr,) = allowedCollections.at(i);
-             collections[i] = addr;
+            (address addr,) = allowedCollections.at(i);
+            collections[i] = addr;
         }
     }
 
@@ -134,12 +134,8 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     function isTokenAllowed(address _collection, uint256 _tokenId) public view returns (bool) {
         (bool isCollectionAllowed,) = allowedCollections.tryGet(_collection);
 
-        return
-            isCollectionAllowed &&
-            (
-                allowedTokenIds[_collection].allowAllIds ||
-                allowedTokenIds[_collection].tokenIds[_tokenId]
-            );
+        return isCollectionAllowed
+            && (allowedTokenIds[_collection].allowAllIds || allowedTokenIds[_collection].tokenIds[_tokenId]);
     }
 
     /// @inheritdoc INftVault
@@ -161,12 +157,10 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     }
 
     /// @inheritdoc INftVault
-    function deposit(
-        address _to,
-        address _collection,
-        uint256 _tokenId,
-        uint256 _amount
-    ) public returns (uint256 amountMinted) {
+    function deposit(address _to, address _collection, uint256 _tokenId, uint256 _amount)
+        public
+        returns (uint256 amountMinted)
+    {
         if (!isTokenAllowed(_collection, _tokenId)) revert DisallowedToken();
 
         uint256 sentTokenBalance = getSentTokenBalance(_collection, _tokenId);
@@ -192,12 +186,10 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     }
 
     /// @inheritdoc INftVault
-    function withdraw(
-        address _to,
-        address _collection,
-        uint256 _tokenId,
-        uint256 _amount
-    ) public returns (uint256 amountBurned) {
+    function withdraw(address _to, address _collection, uint256 _tokenId, uint256 _amount)
+        public
+        returns (uint256 amountBurned)
+    {
         if (_amount == 0 || balances[_collection][_tokenId] < _amount) revert WrongAmount();
 
         balances[_collection][_tokenId] -= _amount;
@@ -237,13 +229,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     }
 
     /// @inheritdoc INftVault
-    function skim(
-        address _to,
-        NftType nftType,
-        address _collection,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external {
+    function skim(address _to, NftType nftType, address _collection, uint256 _tokenId, uint256 _amount) external {
         // Cannot skim supported token
         if (isTokenAllowed(_collection, _tokenId)) revert MustBeDisallowedToken();
 

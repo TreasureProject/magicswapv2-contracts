@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 import "forge-std/Test.sol";
 
@@ -121,25 +121,25 @@ contract NftVaultTest is Test {
 
         if (configId == 0) {
             collections.push(collectionERC721all);
-        } else if(configId == 1) {
+        } else if (configId == 1) {
             collections.push(collectionERC1155all);
-        } else if(configId == 2) {
+        } else if (configId == 2) {
             collections.push(collectionERC721allowed);
-        } else if(configId == 3) {
+        } else if (configId == 3) {
             collections.push(collectionERC1155allowed);
-        } else if(configId == 4) {
+        } else if (configId == 4) {
             collections.push(collectionERC721all);
             collections.push(collectionERC1155all);
-        } else if(configId == 5) {
+        } else if (configId == 5) {
             collections.push(collectionERC721allowed);
             collections.push(collectionERC1155allowed);
-        } else if(configId == 6) {
+        } else if (configId == 6) {
             collections.push(collectionERC721all);
             collections.push(collectionERC1155allowed);
-        } else if(configId == 7) {
+        } else if (configId == 7) {
             collections.push(collectionERC721allowed);
             collections.push(collectionERC1155all);
-        } else if(configId == 8) {
+        } else if (configId == 8) {
             collections.push(collectionERC721all);
             collections.push(collectionERC721all);
         } else {
@@ -149,10 +149,10 @@ contract NftVaultTest is Test {
         return collections;
     }
 
-    function _deployTestVault(uint256 configId) public returns (
-        NftVault vault,
-        INftVault.CollectionData[] memory _collections
-    ) {
+    function _deployTestVault(uint256 configId)
+        public
+        returns (NftVault vault, INftVault.CollectionData[] memory _collections)
+    {
         _collections = _getConfig(configId);
         vault = NftVault(address(nftVaultFactory.createVault(_collections)));
     }
@@ -165,7 +165,7 @@ contract NftVaultTest is Test {
         addresses = new address[](_collections.length);
 
         for (uint256 i = 0; i < collections.length; i++) {
-             addresses[i] = _collections[i].addr;
+            addresses[i] = _collections[i].addr;
         }
     }
 
@@ -216,7 +216,7 @@ contract NftVaultTest is Test {
         assertEq(nftVault.VAULT_HASH(), bytes32(0));
         assertEq(nftVault.getAllowedCollections(), new address[](0));
         assertEq(nftVault.getAllowedCollectionsLength(), 0);
-        assertEq(nftVault.ONE(), 10**nftVault.decimals());
+        assertEq(nftVault.ONE(), 10 ** nftVault.decimals());
         assertEq(nftVault.ONE(), 1e18);
         assertEq(nftVault.name(), "name");
         assertEq(nftVault.symbol(), "symbol");
@@ -279,8 +279,12 @@ contract NftVaultTest is Test {
         nftVault.validateNftType(collectionERC1155allWrongNftType.addr, collectionERC1155allWrongNftType.nftType);
 
         // test hypothetical contract that supports ERC721 and ERC1155
-        vm.mockCall(erc721and1155, abi.encodeCall(ERC165.supportsInterface, (type(IERC721).interfaceId)), abi.encode(true));
-        vm.mockCall(erc721and1155, abi.encodeCall(ERC165.supportsInterface, (type(IERC1155).interfaceId)), abi.encode(true));
+        vm.mockCall(
+            erc721and1155, abi.encodeCall(ERC165.supportsInterface, (type(IERC721).interfaceId)), abi.encode(true)
+        );
+        vm.mockCall(
+            erc721and1155, abi.encodeCall(ERC165.supportsInterface, (type(IERC1155).interfaceId)), abi.encode(true)
+        );
         assertEq(
             uint256(nftVault.validateNftType(erc721and1155, INftVault.NftType.ERC721)),
             uint256(INftVault.NftType.ERC721)
@@ -328,13 +332,7 @@ contract NftVaultTest is Test {
 
         erc1155.mint(user1, tokenId, amount);
         vm.prank(user1);
-        erc1155.safeTransferFrom(
-            user1,
-            address(nftVault),
-            tokenId,
-            amount,
-            bytes("")
-        );
+        erc1155.safeTransferFrom(user1, address(nftVault), tokenId, amount, bytes(""));
         assertEq(nftVault.getSentTokenBalance(address(erc1155), tokenId), amount);
     }
 
@@ -349,44 +347,24 @@ contract NftVaultTest is Test {
         NftVault nftVault = NftVault(address(nftVaultFactory.createVault(collections)));
 
         vm.expectRevert(INftVault.DisallowedToken.selector);
-        nftVault.deposit(
-            user1,
-            address(5566),
-            _tokenId,
-            1
-        );
+        nftVault.deposit(user1, address(5566), _tokenId, 1);
 
         ERC721Mintable(collections[0].addr).mint(user2, otherTokenId);
 
         vm.expectRevert(INftVault.WrongAmount.selector);
-        nftVault.deposit(
-            user1,
-            collections[0].addr,
-            otherTokenId,
-            1
-        );
+        nftVault.deposit(user1, collections[0].addr, otherTokenId, 1);
 
         ERC721Mintable(collections[0].addr).mint(address(nftVault), _tokenId);
         assertEq(nftVault.getSentTokenBalance(collections[0].addr, _tokenId), 1);
 
         vm.expectRevert(INftVault.WrongAmount.selector);
-        nftVault.deposit(
-            user1,
-            collections[0].addr,
-            _tokenId,
-            0
-        );
+        nftVault.deposit(user1, collections[0].addr, _tokenId, 0);
 
         ERC1155Mintable(collections[1].addr).mint(address(nftVault), _tokenId, _amount);
         assertEq(nftVault.getSentTokenBalance(collections[1].addr, _tokenId), _amount);
 
         vm.expectRevert(INftVault.WrongAmount.selector);
-        nftVault.deposit(
-            user1,
-            collections[1].addr,
-            _tokenId,
-            _amount + 1
-        );
+        nftVault.deposit(user1, collections[1].addr, _tokenId, _amount + 1);
     }
 
     function testDepositAllConfigs(uint256 _tokenId, uint256 _amount) public {
@@ -413,12 +391,7 @@ contract NftVaultTest is Test {
 
                 vm.expectEmit(true, true, true, true);
                 emit Deposit(user1, collections[i].addr, _tokenId, _amount);
-                uint256 amountMinted = vault.deposit(
-                    user1,
-                    collections[i].addr,
-                    _tokenId,
-                    _amount
-                );
+                uint256 amountMinted = vault.deposit(user1, collections[i].addr, _tokenId, _amount);
 
                 assertEq(amountMinted / vault.ONE(), _amount);
                 assertEq(vault.balanceOf(user1), erc20balanceBefore + amountMinted);
@@ -504,71 +477,31 @@ contract NftVaultTest is Test {
         ERC721Mintable(collections[0].addr).mint(address(nftVault), _tokenId);
         ERC1155Mintable(collections[1].addr).mint(address(nftVault), _tokenId, _amount);
 
-        uint256 amountMinted721 = nftVault.deposit(
-            user1,
-            collections[0].addr,
-            _tokenId,
-            1
-        );
+        uint256 amountMinted721 = nftVault.deposit(user1, collections[0].addr, _tokenId, 1);
 
         assertEq(amountMinted721, 1 * nftVault.ONE());
 
-        uint256 amountMinted1155 = nftVault.deposit(
-            user1,
-            collections[1].addr,
-            _tokenId,
-            _amount
-        );
+        uint256 amountMinted1155 = nftVault.deposit(user1, collections[1].addr, _tokenId, _amount);
 
         assertEq(amountMinted1155, _amount * nftVault.ONE());
 
         vm.expectRevert(INftVault.WrongAmount.selector);
-        nftVault.withdraw(
-            user1,
-            collections[0].addr,
-            _tokenId,
-            0
-        );
+        nftVault.withdraw(user1, collections[0].addr, _tokenId, 0);
 
         vm.expectRevert(INftVault.WrongAmount.selector);
-        nftVault.withdraw(
-            user1,
-            collections[1].addr,
-            _tokenId,
-            0
-        );
+        nftVault.withdraw(user1, collections[1].addr, _tokenId, 0);
 
         vm.expectRevert(INftVault.WrongAmount.selector);
-        nftVault.withdraw(
-            user1,
-            collections[0].addr,
-            _tokenId,
-            2
-        );
+        nftVault.withdraw(user1, collections[0].addr, _tokenId, 2);
 
         vm.expectRevert(INftVault.WrongAmount.selector);
-        nftVault.withdraw(
-            user1,
-            collections[1].addr,
-            _tokenId,
-            _amount + 1
-        );
+        nftVault.withdraw(user1, collections[1].addr, _tokenId, _amount + 1);
 
         vm.expectRevert("ERC20: burn amount exceeds balance");
-        nftVault.withdraw(
-            user1,
-            collections[0].addr,
-            _tokenId,
-            1
-        );
+        nftVault.withdraw(user1, collections[0].addr, _tokenId, 1);
 
         vm.expectRevert("ERC20: burn amount exceeds balance");
-        nftVault.withdraw(
-            user1,
-            collections[1].addr,
-            _tokenId,
-            _amount
-        );
+        nftVault.withdraw(user1, collections[1].addr, _tokenId, _amount);
     }
 
     function testWithdraw(uint256 _tokenId, uint256 _amount) public {
@@ -581,33 +514,18 @@ contract NftVaultTest is Test {
         ERC721Mintable(collections[0].addr).mint(address(nftVault), _tokenId);
         ERC1155Mintable(collections[1].addr).mint(address(nftVault), _tokenId, _amount);
 
-        uint256 amountMinted721 = nftVault.deposit(
-            user1,
-            collections[0].addr,
-            _tokenId,
-            1
-        );
+        uint256 amountMinted721 = nftVault.deposit(user1, collections[0].addr, _tokenId, 1);
 
         assertEq(amountMinted721, 1 * nftVault.ONE());
 
-        uint256 amountMinted1155 = nftVault.deposit(
-            user2,
-            collections[1].addr,
-            _tokenId,
-            _amount
-        );
+        uint256 amountMinted1155 = nftVault.deposit(user2, collections[1].addr, _tokenId, _amount);
 
         assertEq(amountMinted1155, _amount * nftVault.ONE());
 
         vm.prank(user1);
         nftVault.transfer(address(nftVault), amountMinted721);
 
-        uint256 amountBurned = nftVault.withdraw(
-            user1,
-            collections[1].addr,
-            _tokenId,
-            1
-        );
+        uint256 amountBurned = nftVault.withdraw(user1, collections[1].addr, _tokenId, 1);
 
         assertEq(amountBurned, amountMinted721);
         assertEq(nftVault.balanceOf(user1), 0);
@@ -619,12 +537,7 @@ contract NftVaultTest is Test {
         vm.prank(user2);
         nftVault.transfer(address(nftVault), transferAmount);
 
-        amountBurned = nftVault.withdraw(
-            user2,
-            collections[1].addr,
-            _tokenId,
-            _amount - 1
-        );
+        amountBurned = nftVault.withdraw(user2, collections[1].addr, _tokenId, _amount - 1);
 
         assertEq(amountBurned, transferAmount);
         assertEq(nftVault.balanceOf(user2), nftVault.ONE());
@@ -636,12 +549,7 @@ contract NftVaultTest is Test {
         vm.prank(user2);
         nftVault.transfer(address(nftVault), transferAmount);
 
-        amountBurned = nftVault.withdraw(
-            user2,
-            collections[0].addr,
-            _tokenId,
-            1
-        );
+        amountBurned = nftVault.withdraw(user2, collections[0].addr, _tokenId, 1);
 
         assertEq(amountBurned, transferAmount);
         assertEq(nftVault.balanceOf(user2), 0);
@@ -674,12 +582,7 @@ contract NftVaultTest is Test {
         lastAmounts[0] = 1;
         lastAmounts[1] = _amount;
 
-        uint256 amountMinted = nftVault.depositBatch(
-            user1,
-            lastCollections,
-            lastTokenIds,
-            lastAmounts
-        );
+        uint256 amountMinted = nftVault.depositBatch(user1, lastCollections, lastTokenIds, lastAmounts);
 
         assertEq(amountMinted, (_amount + 1) * nftVault.ONE());
         assertEq(nftVault.balanceOf(user1), amountMinted);
@@ -689,12 +592,7 @@ contract NftVaultTest is Test {
         nftVault.transfer(address(nftVault), nftVault.balanceOf(user1));
         vm.stopPrank();
 
-        nftVault.withdrawBatch(
-            user1,
-            lastCollections,
-            lastTokenIds,
-            lastAmounts
-        );
+        nftVault.withdrawBatch(user1, lastCollections, lastTokenIds, lastAmounts);
 
         assertEq(ERC721Mintable(collections[0].addr).ownerOf(_tokenId), user1);
         assertEq(ERC1155Mintable(collections[1].addr).balanceOf(user1, _tokenId), _amount);
@@ -718,34 +616,16 @@ contract NftVaultTest is Test {
         erc721.transferFrom(user1, address(nftVault), tokenId);
         vm.prank(user2);
         vm.expectRevert(INftVault.MustBeDisallowedToken.selector);
-        nftVault.skim(
-            user2,
-            INftVault.NftType.ERC721,
-            address(erc721),
-            tokenId,
-            1
-        );
+        nftVault.skim(user2, INftVault.NftType.ERC721, address(erc721), tokenId, 1);
 
         assertTrue(nftVault.isTokenAllowed(address(erc1155), tokenId));
         assertEq(erc1155.balanceOf(user2, tokenId), 0);
         erc1155.mint(user1, tokenId, amount);
         vm.prank(user1);
-        erc1155.safeTransferFrom(
-            user1,
-            address(nftVault),
-            tokenId,
-            amount,
-            bytes("")
-        );
+        erc1155.safeTransferFrom(user1, address(nftVault), tokenId, amount, bytes(""));
         vm.prank(user2);
         vm.expectRevert(INftVault.MustBeDisallowedToken.selector);
-        nftVault.skim(
-            user2,
-            INftVault.NftType.ERC1155,
-            address(erc1155),
-            tokenId,
-            amount
-        );
+        nftVault.skim(user2, INftVault.NftType.ERC1155, address(erc1155), tokenId, amount);
         assertEq(erc1155.balanceOf(user2, tokenId), 0);
 
         ERC721Mintable newErc721 = new ERC721Mintable();
@@ -753,13 +633,7 @@ contract NftVaultTest is Test {
         newErc721.mint(address(nftVault), tokenId);
         assertFalse(nftVault.isTokenAllowed(address(newErc721), tokenId));
         vm.prank(user2);
-        nftVault.skim(
-            user2,
-            INftVault.NftType.ERC721,
-            address(newErc721),
-            tokenId,
-            amount
-        );
+        nftVault.skim(user2, INftVault.NftType.ERC721, address(newErc721), tokenId, amount);
         assertEq(newErc721.balanceOf(user2), 1);
 
         ERC1155Mintable newErc1155 = new ERC1155Mintable();
@@ -767,13 +641,7 @@ contract NftVaultTest is Test {
         newErc1155.mint(address(nftVault), tokenId, amount);
         assertFalse(nftVault.isTokenAllowed(address(newErc1155), tokenId));
         vm.prank(user2);
-        nftVault.skim(
-            user2,
-            INftVault.NftType.ERC1155,
-            address(newErc1155),
-            tokenId,
-            amount
-        );
+        nftVault.skim(user2, INftVault.NftType.ERC1155, address(newErc1155), tokenId, amount);
         assertEq(newErc1155.balanceOf(user2, tokenId), amount);
     }
 }

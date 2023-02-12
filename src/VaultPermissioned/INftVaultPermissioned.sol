@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 /// @title Vault contract for wrapping NFTs (ERC721/ERC1155) to ERC20
 interface INftVaultPermissioned {
-    enum NftType { ERC721, ERC1155 }
+    enum NftType {
+        ERC721,
+        ERC1155
+    }
 
     /// @notice Vault configuration struct that specifies which NFTs are accepted in vault.
     /// @param addr address of nft contract
@@ -152,7 +155,10 @@ interface INftVaultPermissioned {
     /// @param collectionAddr NFT address
     /// @param nftType NFT type, ERC721 or ERC1155
     /// @return validatedNftType returns validated enum NftType as uint256
-    function validateNftType(address collectionAddr, NftType nftType) external view returns (uint256 validatedNftType);
+    function validateNftType(address collectionAddr, NftType nftType)
+        external
+        view
+        returns (uint256 validatedNftType);
 
     /// @notice Returns if true token can be deposited
     /// @param collection NFT address
@@ -173,12 +179,9 @@ interface INftVaultPermissioned {
     /// @param tokenId token ID of deposited NFT
     /// @param amount amount of deposited NFT, for ERC721 it's always 1
     /// @return amountMinted amount of minted ERC20 token
-    function deposit(
-        address to,
-        address collection,
-        uint256 tokenId,
-        uint256 amount
-    ) external returns (uint256 amountMinted);
+    function deposit(address to, address collection, uint256 tokenId, uint256 amount)
+        external
+        returns (uint256 amountMinted);
 
     /// @notice Deposit NFTs to vault
     /// @param to address that gets minted ERC20 token
@@ -186,12 +189,9 @@ interface INftVaultPermissioned {
     /// @param tokenId array of token IDs of deposited NFTs
     /// @param amount array if amounts of deposited NFTs, for ERC721 it's always 1
     /// @return amountMinted amount of minted ERC20 token
-    function depositBatch(
-        address to,
-        address[] memory collection,
-        uint256[] memory tokenId,
-        uint256[] memory amount
-    ) external returns (uint256 amountMinted);
+    function depositBatch(address to, address[] memory collection, uint256[] memory tokenId, uint256[] memory amount)
+        external
+        returns (uint256 amountMinted);
 
     /// @notice Withdraw NFT from vault
     /// @param to address that gets NFT
@@ -199,12 +199,9 @@ interface INftVaultPermissioned {
     /// @param tokenId token ID of NFT to withdraw
     /// @param amount amount of NFT to withdraw, for ERC721 it's always 1
     /// @return amountBurned amount of burned ERC20
-    function withdraw(
-        address to,
-        address collection,
-        uint256 tokenId,
-        uint256 amount
-    ) external returns (uint256 amountBurned);
+    function withdraw(address to, address collection, uint256 tokenId, uint256 amount)
+        external
+        returns (uint256 amountBurned);
 
     /// @notice Withdraw NFTs from vault
     /// @param to address that gets NFT
@@ -212,12 +209,9 @@ interface INftVaultPermissioned {
     /// @param tokenId array of token IDs of NFTs to withdraw
     /// @param amount array of amounts of NFTs to withdraw, for ERC721 it's always 1
     /// @return amountBurned amount of burned ERC20
-    function withdrawBatch(
-        address to,
-        address[] memory collection,
-        uint256[] memory tokenId,
-        uint256[] memory amount
-    ) external returns (uint256 amountBurned);
+    function withdrawBatch(address to, address[] memory collection, uint256[] memory tokenId, uint256[] memory amount)
+        external
+        returns (uint256 amountBurned);
 
     /// @notice Allow anyone to withdraw tokens sent to this vault by accident
     ///         Only unsupported NFTs can be skimmed.
@@ -226,13 +220,7 @@ interface INftVaultPermissioned {
     /// @param collection address of NFT to skim
     /// @param tokenId token ID of NFT to skim
     /// @param amount amount of NFT to skim, for ERC721 it's always 1
-    function skim(
-        address to,
-        NftType nftType,
-        address collection,
-        uint256 tokenId,
-        uint256 amount
-    ) external;
+    function skim(address to, NftType nftType, address collection, uint256 tokenId, uint256 amount) external;
 
     /// @notice Allow wallet to deposit/withdraw. Only applicable to permissioned vault.
     /// @param wallet address that is allowed to deposit/withdraw

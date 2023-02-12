@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 import "forge-std/Test.sol";
 
@@ -119,22 +119,22 @@ contract NftVaultFactoryTest is Test {
 
         if (configId == 0) {
             collections.push(collectionERC721all);
-        } else if(configId == 1) {
+        } else if (configId == 1) {
             collections.push(collectionERC1155all);
-        } else if(configId == 2) {
+        } else if (configId == 2) {
             collections.push(collectionERC721allowed);
-        } else if(configId == 3) {
+        } else if (configId == 3) {
             collections.push(collectionERC1155allowed);
-        } else if(configId == 4) {
+        } else if (configId == 4) {
             collections.push(collectionERC721all);
             collections.push(collectionERC1155all);
-        } else if(configId == 5) {
+        } else if (configId == 5) {
             collections.push(collectionERC721allowed);
             collections.push(collectionERC1155allowed);
-        } else if(configId == 6) {
+        } else if (configId == 6) {
             collections.push(collectionERC721all);
             collections.push(collectionERC1155allowed);
-        } else if(configId == 7) {
+        } else if (configId == 7) {
             collections.push(collectionERC721allowed);
             collections.push(collectionERC1155all);
         } else {
@@ -183,7 +183,6 @@ contract NftVaultFactoryTest is Test {
             assertEq(vaultFactory.exists(_collections), true);
             assertEq(address(vaultFactory.vaultHashMap(vaultFactory.hashVault(_collections))), vaults[configId]);
             assertEq(vaultFactory.getVaultAt(vaultFactory.vaultIdMap(INftVault(vaults[configId]))), vaults[configId]);
-
         }
     }
 }

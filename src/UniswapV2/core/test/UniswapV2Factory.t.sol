@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 import "forge-std/Test.sol";
 
@@ -23,7 +23,7 @@ contract UniswapV2FactoryTest is Test {
     uint256 tooBigFee;
     uint256 MAX_FEE;
 
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
     event DefaultFeesSet(IUniswapV2Factory.DefaultFees fees);
     event LpFeesSet(address indexed pair, uint256 lpFee, bool overrideFee);
     event RoyaltiesFeesSet(address indexed pair, address beneficiary, uint256 royaltiesFee);
@@ -70,28 +70,20 @@ contract UniswapV2FactoryTest is Test {
         pair = factory.createPair(_tokenA, _tokenB);
     }
 
-    function testSetDefaultFees(
-        uint256 _lpFee,
-        uint256 _protocolFee
-    ) public {
+    function testSetDefaultFees(uint256 _lpFee, uint256 _protocolFee) public {
         vm.assume(_lpFee <= MAX_FEE);
         vm.assume(_protocolFee <= MAX_FEE);
         vm.assume(_protocolFee + _lpFee <= MAX_FEE);
 
-        (
-            uint256 protocolFee,
-            uint256 lpFee
-        ) = factory.defaultFees();
+        (uint256 protocolFee, uint256 lpFee) = factory.defaultFees();
 
         assertEq(protocolFee, 0);
         assertEq(lpFee, 0);
 
         _assertFees(pool1, address(0), 0, 0, 0, protocolFeeBeneficiary);
 
-        IUniswapV2Factory.DefaultFees memory fees = IUniswapV2Factory.DefaultFees({
-            protocolFee: _protocolFee,
-            lpFee: _lpFee
-        });
+        IUniswapV2Factory.DefaultFees memory fees =
+            IUniswapV2Factory.DefaultFees({protocolFee: _protocolFee, lpFee: _lpFee});
 
         vm.prank(hacker);
         vm.expectRevert("Ownable: caller is not the owner");
@@ -102,10 +94,7 @@ contract UniswapV2FactoryTest is Test {
         emit DefaultFeesSet(fees);
         factory.setDefaultFees(fees);
 
-        (
-            protocolFee,
-            lpFee
-        ) = factory.defaultFees();
+        (protocolFee, lpFee) = factory.defaultFees();
 
         assertEq(protocolFee, _protocolFee);
         assertEq(lpFee, _lpFee);
@@ -114,30 +103,15 @@ contract UniswapV2FactoryTest is Test {
 
         vm.prank(owner);
         vm.expectRevert("MagicswapV2: protocolFee > MAX_FEE");
-        factory.setDefaultFees(
-            IUniswapV2Factory.DefaultFees({
-                protocolFee: tooBigFee,
-                lpFee: _lpFee
-            })
-        );
+        factory.setDefaultFees(IUniswapV2Factory.DefaultFees({protocolFee: tooBigFee, lpFee: _lpFee}));
 
         vm.prank(owner);
         vm.expectRevert("MagicswapV2: lpFee > MAX_FEE");
-        factory.setDefaultFees(
-            IUniswapV2Factory.DefaultFees({
-                protocolFee: _protocolFee,
-                lpFee: tooBigFee
-            })
-        );
+        factory.setDefaultFees(IUniswapV2Factory.DefaultFees({protocolFee: _protocolFee, lpFee: tooBigFee}));
 
         vm.prank(owner);
         vm.expectRevert("MagicswapV2: protocolFee + lpFee > MAX_FEE");
-        factory.setDefaultFees(
-            IUniswapV2Factory.DefaultFees({
-                protocolFee: tooBigFee / 2 + 1,
-                lpFee: tooBigFee / 2
-            })
-        );
+        factory.setDefaultFees(IUniswapV2Factory.DefaultFees({protocolFee: tooBigFee / 2 + 1, lpFee: tooBigFee / 2}));
     }
 
     function testSetLpFee(address _pair, uint256 _lpFee, address _tokenA, address _tokenB) public {
