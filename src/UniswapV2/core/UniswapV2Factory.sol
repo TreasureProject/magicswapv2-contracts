@@ -114,6 +114,7 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
     function setRoyaltiesFee(address _pair, address _beneficiary, uint256 _royaltiesFee) external onlyOwner {
         require(_royaltiesFee <= MAX_FEE, 'MagicswapV2: _royaltiesFee > MAX_FEE');
         require(_allPairs.contains(_pair), 'MagicswapV2: _pair invalid');
+        require(_beneficiary != address(0), 'MagicswapV2: _beneficiary invalid');
 
         pairFees[_pair].royaltiesBeneficiary = _beneficiary;
         pairFees[_pair].royaltiesFee = _royaltiesFee;

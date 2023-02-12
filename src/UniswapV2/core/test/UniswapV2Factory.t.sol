@@ -205,6 +205,10 @@ contract UniswapV2FactoryTest is Test {
         _pair = _createPair(_tokenA, _tokenB);
 
         vm.prank(owner);
+        vm.expectRevert("MagicswapV2: _beneficiary invalid");
+        factory.setRoyaltiesFee(_pair, address(0), _royaltiesFee);
+
+        vm.prank(owner);
         factory.setRoyaltiesFee(_pair, _royaltiesBeneficiary, _royaltiesFee);
 
         (
