@@ -34,7 +34,7 @@ contract NftVaultFactoryTest is Test {
 
     INftVault.CollectionData[] public collections;
 
-    event Deposit(address to, address collection, uint256 tokenId, uint256 amount);
+    event Deposit(address indexed to, address indexed collection, uint256 tokenId, uint256 amount);
 
     function setUp() public {
         collectionERC721all = INftVault.CollectionData({

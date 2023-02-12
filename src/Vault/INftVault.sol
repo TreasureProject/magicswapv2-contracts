@@ -37,14 +37,14 @@ interface INftVault {
     /// @param collection NFT address that is deposited
     /// @param tokenId token id that is deposited
     /// @param amount amount of token that is deposited, for ERC721 always 1
-    event Deposit(address to, address collection, uint256 tokenId, uint256 amount);
+    event Deposit(address indexed to, address indexed collection, uint256 tokenId, uint256 amount);
 
     /// @notice Emitted on withdrawing NFT from vault
     /// @param to address that gets withdrawn NFTs
     /// @param collection NFT address that is withdrawn
     /// @param tokenId token id that is withdrawn
     /// @param amount amount of token that is withdrawn, for ERC721 always 1
-    event Withdraw(address to, address collection, uint256 tokenId, uint256 amount);
+    event Withdraw(address indexed to, address indexed collection, uint256 tokenId, uint256 amount);
 
     /// @dev Contract is already initialized
     error Initialized();

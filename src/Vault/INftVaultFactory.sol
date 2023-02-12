@@ -15,8 +15,8 @@ interface INftVaultFactory {
     event VaultCreated(
         string name,
         string symbol,
-        INftVault vault,
-        uint256 vaultId,
+        INftVault indexed vault,
+        uint256 indexed vaultId,
         INftVault.CollectionData[] collections,
         address creator
     );
