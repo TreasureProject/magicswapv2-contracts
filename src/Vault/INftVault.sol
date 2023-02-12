@@ -50,6 +50,8 @@ interface INftVault {
     error Initialized();
     /// @dev Collection data is empty
     error InvalidCollections();
+    /// @dev Collection already added
+    error DuplicateCollection();
     /// @dev Token id is listed twice in CollectionData.tokenIds array
     error TokenIdAlreadySet();
     /// @dev Token ids in CollectionData.tokenIds array are not sorted

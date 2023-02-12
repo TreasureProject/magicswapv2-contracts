@@ -16,7 +16,6 @@ import "./INftVault.sol";
 import "./INftVaultFactory.sol";
 
 contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
-    using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     /// @notice value of 1 token, including decimals
@@ -58,7 +57,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
 
             uint256 nftType = validateNftType(collection.addr, collection.nftType);
 
-            allowedCollections.set(collection.addr, nftType);
+            if (!allowedCollections.set(collection.addr, nftType)) revert DuplicateCollection();
             allowedTokenIds[collection.addr].allowAllIds = collection.allowAllIds;
 
             if (collection.allowAllIds) continue;

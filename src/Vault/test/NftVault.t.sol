@@ -141,6 +141,9 @@ contract NftVaultTest is Test {
         } else if(configId == 7) {
             collections.push(collectionERC721allowed);
             collections.push(collectionERC1155all);
+        } else if(configId == 8) {
+            collections.push(collectionERC721all);
+            collections.push(collectionERC721all);
         } else {
             revert("WrongConfig");
         }
@@ -204,6 +207,11 @@ contract NftVaultTest is Test {
         collections.push(collectionERC721allowedDuplicatedTokens);
         vm.expectRevert(INftVault.TokenIdAlreadySet.selector);
         nftVault = NftVault(address(nftVaultFactory.createVault(collections)));
+
+        delete collections;
+        INftVault.CollectionData[] memory _collections = _getConfig(8);
+        vm.expectRevert(INftVault.DuplicateCollection.selector);
+        nftVault = NftVault(address(nftVaultFactory.createVault(_collections)));
 
         nftVault = new NftVault("name", "symbol");
 
