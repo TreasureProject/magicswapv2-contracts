@@ -36,9 +36,9 @@ interface INftVaultFactory {
     function getAllVaults() external view returns (address[] memory);
 
     /// @notice Get vault by its EnumerableSet vaultId
-    /// @param i vaultId
+    /// @param index vaultId or index in NftVaultFactory.vaults array
     /// @return vault address
-    function getVaultAt(uint256 i) external view returns (address);
+    function getVaultAt(uint256 index) external view returns (address);
 
     /// @return length of vault's EnumerableSet
     function getVaultLength() external view returns (uint256);

@@ -23,8 +23,8 @@ contract NftVaultFactory is INftVaultFactory {
     }
 
     /// @inheritdoc INftVaultFactory
-    function getVaultAt(uint256 _i) external view returns (address) {
-        return vaults.at(_i);
+    function getVaultAt(uint256 _index) external view returns (address) {
+        return vaults.at(_index);
     }
 
     /// @inheritdoc INftVaultFactory
