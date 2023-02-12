@@ -134,6 +134,7 @@ interface INftVault {
     function getSentTokenBalance(address collection, uint256 tokenId) external view returns (uint256);
 
     /// @notice Deposit NFT to vault
+    /// @dev This low-level function should be called from a contract which performs important safety checks
     /// @param to address that gets minted ERC20 token
     /// @param collection address of deposited NFT
     /// @param tokenId token ID of deposited NFT
@@ -147,6 +148,7 @@ interface INftVault {
     ) external returns (uint256 amountMinted);
 
     /// @notice Deposit NFTs to vault
+    /// @dev This low-level function should be called from a contract which performs important safety checks
     /// @param to address that gets minted ERC20 token
     /// @param collection array of addresses of deposited NFTs
     /// @param tokenId array of token IDs of deposited NFTs
@@ -160,6 +162,7 @@ interface INftVault {
     ) external returns (uint256 amountMinted);
 
     /// @notice Withdraw NFT from vault
+    /// @dev This low-level function should be called from a contract which performs important safety checks
     /// @param to address that gets NFT
     /// @param collection address of NFT to withdraw
     /// @param tokenId token ID of NFT to withdraw
@@ -173,6 +176,7 @@ interface INftVault {
     ) external returns (uint256 amountBurned);
 
     /// @notice Withdraw NFTs from vault
+    /// @dev This low-level function should be called from a contract which performs important safety checks
     /// @param to address that gets NFT
     /// @param collection array of addresses of NFTs to withdraw
     /// @param tokenId array of token IDs of NFTs to withdraw
