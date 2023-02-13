@@ -29,7 +29,7 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
     ///         EOA, vault itself and `allowedContracts`
     bool public immutable isSoulbound;
 
-    /// @notice unique it of the vault geenrated using its configuration
+    /// @notice unique ID of the vault generated using its configuration
     bytes32 public VAULT_HASH;
 
     /// @notice maps collection address to nft type
@@ -41,10 +41,10 @@ contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC
     /// @notice maps collection address to tokenId to amount wrapped
     mapping(address => mapping(uint256 => uint256)) public balances;
 
-    /// @notice deposit/withdraw allow list. Maps wallet address to bool, if true, wallet is allwed to deposit/withdraw
+    /// @notice deposit/withdraw allow list. Maps wallet address to bool, if true, wallet is allowed to deposit/withdraw
     mapping(address => bool) public allowedWallets;
 
-    /// @notice Vault ERC20 receive allow list. Maps contract address to bool, if true, contract is allwed to receive
+    /// @notice Vault ERC20 receive allow list. Maps contract address to bool, if true, contract is allowed to receive
     ///         Vault ERC20 token.
     mapping(address => bool) public allowedContracts;
 

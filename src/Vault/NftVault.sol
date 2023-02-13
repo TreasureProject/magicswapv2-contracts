@@ -24,7 +24,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     /// @notice minimum liquidity that is frozen in UniV2 pool
     uint256 public constant UNIV2_MINIMUM_LIQUIDITY = 1e3;
 
-    /// @notice unique it of the vault geenrated using its configuration
+    /// @notice unique ID of the vault generated using its configuration
     bytes32 public VAULT_HASH;
 
     /// @notice maps collection address to nft type

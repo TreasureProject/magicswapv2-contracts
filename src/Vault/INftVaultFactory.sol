@@ -45,6 +45,7 @@ interface INftVaultFactory {
 
     /// @notice Returns true if vault has been deployed by factory
     /// @param vault address
+    /// @return true if vault is deployed by the factory
     function isVault(address vault) external view returns (bool);
 
     /// @notice Get vault by it's config
@@ -65,6 +66,6 @@ interface INftVaultFactory {
     /// @notice Create new vault
     /// @dev If vault already exists, function reverts
     /// @param collections vault's config
-    /// @return vault address of (newly) deployed vault
+    /// @return vault address of deployed vault
     function createVault(INftVault.CollectionData[] memory collections) external returns (INftVault vault);
 }

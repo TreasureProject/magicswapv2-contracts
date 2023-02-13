@@ -43,14 +43,13 @@ interface IUniswapV2Factory {
     function getFees(address _pair) external view returns (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee);
 
     /// @notice Returns all fees for pair and beneficiaries
-    /// @dev Fees are capped by MAX_FEE, however it is possible for a malicious owner
-    ///      of this contract to do a combination of transactions to achive fees above MAX_FEE.
-    ///      In case such combination of transactions is executed, by accident or otherwise,
-    ///      fees are allocatied by priority:
+    /// @dev Fees are capped in total by MAX_FEE value. If by mistake or otherwise owner of this contract
+    ///      does a combination of transactions and tries to achive total fees above MAX_FEE, fees are allocatied
+    ///      by priority:
     ///      1. lp fee
     ///      2. royalties
     ///      3. protocol fee
-    ///      If MAX_FEE == 5000, lpFee == 500, royaltiesFee == 4000 and protocolFee == 5000 then
+    ///      If MAX_FEE == 5000, lpFee == 500, royaltiesFee == 4000 and protocolFee == 4000 then
     ///      effective fees will be allocated acording to the fee priority up to MAX_FEE value.
     ///      In this example: lpFee == 500, royaltiesFee == 4000 and protocolFee == 500.
     /// @param pair address of pair for which to calculate fees and beneficiaries

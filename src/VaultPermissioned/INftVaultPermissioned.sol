@@ -117,7 +117,7 @@ interface INftVaultPermissioned {
     /// @param collections struct array of allowed collections and token IDs
     function init(CollectionData[] memory collections) external;
 
-    /// @notice Returns true if wallet is allwed to deposit/withdraw. Only applicable to permissioned vault.
+    /// @notice Returns true if wallet is allowed to deposit/withdraw. Only applicable to permissioned vault.
     /// @dev Call `isPermissioned()` first to make sure vault is permissioned. Otherwise this function is irrelevant.
     /// @param wallet address that is checked
     /// @return true if wallet is allowed, false otherwise. For permissionless vault always returns false.
