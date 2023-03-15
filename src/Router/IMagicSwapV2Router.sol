@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../UniswapV2/periphery/interfaces/IUniswapV2Router02.sol";
+import "../UniswapV2/periphery/interfaces/IUniswapV2Router01.sol";
 import "../Vault/INftVault.sol";
 
 /// @title Router contract for swapping, managing liquidity and interacting with vaults
-interface IMagicSwapV2Router is IUniswapV2Router02 {
+interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @dev Amounts does not match
     error WrongAmounts();
 
