@@ -4,7 +4,6 @@ pragma solidity 0.8.18;
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 import "./interfaces/IUniswapV2Pair.sol";
-import "./interfaces/IUniswapV2Callee.sol";
 import "./interfaces/IUniswapV2Factory.sol";
 
 import "./libraries/UniswapV2Math.sol";
@@ -198,7 +197,8 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     }
 
     /// @dev this low-level function should be called from a contract which performs important safety checks
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data) external lock {
+    /// @dev keeping bytes parameter for backward compatibility of the interface
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata) external lock {
         require(amount0Out > 0 || amount1Out > 0, "MagicswapV2: INSUFFICIENT_OUTPUT_AMOUNT");
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         require(amount0Out < _reserve0 && amount1Out < _reserve1, "MagicswapV2: INSUFFICIENT_LIQUIDITY");
@@ -212,7 +212,6 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
             require(to != _token0 && to != _token1, "MagicswapV2: INVALID_TO");
             if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
             if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
-            if (data.length > 0) IUniswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
             balance0 = IERC20(_token0).balanceOf(address(this));
             balance1 = IERC20(_token1).balanceOf(address(this));
         }
