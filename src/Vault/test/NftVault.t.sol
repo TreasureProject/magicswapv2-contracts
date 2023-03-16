@@ -588,7 +588,7 @@ contract NftVaultTest is Test {
         assertEq(nftVault.balanceOf(user1), amountMinted);
 
         vm.startPrank(user1);
-        nftVault.transfer(owner, nftVault.UNIV2_MINIMUM_LIQUIDITY());
+        nftVault.transfer(owner, nftVault.ONE() - nftVault.LAST_NFT_AMOUNT());
         nftVault.transfer(address(nftVault), nftVault.balanceOf(user1));
         vm.stopPrank();
 
@@ -598,6 +598,15 @@ contract NftVaultTest is Test {
         assertEq(ERC1155Mintable(collections[1].addr).balanceOf(user1, _tokenId), _amount);
         assertEq(nftVault.balanceOf(user1), 0);
         assertEq(nftVault.balanceOf(address(nftVault)), 0);
+        assertEq(nftVault.totalSupply(), nftVault.ONE() - nftVault.LAST_NFT_AMOUNT());
+
+        vm.startPrank(user1);
+        ERC721Mintable(collections[0].addr).transferFrom(user1, address(nftVault), _tokenId);
+        ERC1155Mintable(collections[1].addr).safeTransferFrom(user1, address(nftVault), _tokenId, _amount, bytes(""));
+        vm.stopPrank();
+
+        uint256 amountMinted2 = nftVault.depositBatch(user1, lastCollections, lastTokenIds, lastAmounts);
+        assertEq(amountMinted2, (_amount + 1) * nftVault.ONE() - nftVault.ONE() + nftVault.LAST_NFT_AMOUNT());
     }
 
     function testSkim(uint256 tokenId, uint256 amount) public {

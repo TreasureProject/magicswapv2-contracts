@@ -82,8 +82,8 @@ interface INftVault {
     /// @notice value of 1 token, including decimals
     function ONE() external view returns (uint256);
 
-    /// @notice minimum liquidity that is frozen in UniV2 pool
-    function UNIV2_MINIMUM_LIQUIDITY() external view returns (uint256);
+    /// @notice amount of token required for last NFT to be redeemed
+    function LAST_NFT_AMOUNT() external view returns (uint256);
 
     /// @notice unique id of the vault generated using its configuration
     function VAULT_HASH() external view returns (bytes32);

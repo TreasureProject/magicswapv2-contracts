@@ -21,8 +21,8 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     /// @notice value of 1 token, including decimals
     uint256 public immutable ONE;
 
-    /// @notice minimum liquidity that is frozen in UniV2 pool
-    uint256 public constant UNIV2_MINIMUM_LIQUIDITY = 1e3;
+    /// @notice amount of token required for last NFT to be redeemed
+    uint256 public immutable LAST_NFT_AMOUNT;
 
     /// @notice unique ID of the vault generated using its configuration
     bytes32 public VAULT_HASH;
@@ -40,6 +40,8 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     /// @param _symbol symbol of ERC20 Vault token
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {
         ONE = 10 ** decimals();
+        /// @dev last NFT can be redeemed for 99%
+        LAST_NFT_AMOUNT = ONE * 99 / 100;
     }
 
     /// @inheritdoc INftVault
@@ -164,12 +166,23 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         if (!isTokenAllowed(_collection, _tokenId)) revert DisallowedToken();
 
         uint256 sentTokenBalance = getSentTokenBalance(_collection, _tokenId);
-        if (_amount == 0 || sentTokenBalance < _amount) revert WrongAmount();
+        if (_amount == 0 || sentTokenBalance != _amount) revert WrongAmount();
 
         balances[_collection][_tokenId] += _amount;
         emit Deposit(_to, _collection, _tokenId, _amount);
 
         amountMinted = ONE * _amount;
+        uint256 totalSupply_ = totalSupply();
+
+        /// @dev If vault ERC20 supply is "0 < totalSupply <= 0.01" it means that vault has been emptied and there
+        ///      is leftover ERC20 token (most likely) locked in the univ2 pair. To prevent minting small amounts
+        ///      of unbacked ERC20 tokens in a loop, which can lead to unexpected behaviour, vault mints
+        ///      `ONE - totalSupply` amount of ERC20 token for the first NFT that is deposited after the vault was
+        ///      emptied. This allows for the vault and univ2 pair to be reused safely.
+        if (totalSupply_ > 0 && totalSupply_ <= ONE - LAST_NFT_AMOUNT) {
+            amountMinted -= totalSupply_;
+        }
+
         _mint(_to, amountMinted);
     }
 
@@ -195,9 +208,9 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         balances[_collection][_tokenId] -= _amount;
         amountBurned = ONE * _amount;
 
-        // when withdrawing the last NFT from the vault, allow being UNIV2_MINIMUM_LIQUIDITY shy
-        if (totalSupply() == amountBurned && balanceOf(address(this)) == amountBurned - UNIV2_MINIMUM_LIQUIDITY) {
-            amountBurned -= UNIV2_MINIMUM_LIQUIDITY;
+        // when withdrawing the last NFT from the vault, allow redeemeing for LAST_NFT_AMOUNT instead of ONE
+        if (totalSupply() == amountBurned && balanceOf(address(this)) >= amountBurned - ONE + LAST_NFT_AMOUNT) {
+            amountBurned = balanceOf(address(this));
         }
 
         _burn(address(this), amountBurned);
