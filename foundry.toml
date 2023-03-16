@@ -3,4 +3,9 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 
+
+[etherscan]
+arbiscan = { key = "${ARBISCAN_API_KEY}" }
+arbiscan-goerli = { key = "${ARBISCAN_API_KEY}", chain = "arbitrum-goerli", url = "https://api-goerli.arbiscan.io/api"}
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
