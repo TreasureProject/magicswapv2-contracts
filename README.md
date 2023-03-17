@@ -29,17 +29,20 @@ forge test -vvv
 ```
 
 ## Deploy
-Setup `PRIVATE_KEY` var in `.env` with deployer's private key.
-Setup `ARBITRUM_RPC` var in `.env` with Arbitrum RPC url.
+Setup `PRIVATE_KEY` var in `.env` using deployer's private key.
+Setup `ARBITRUM_RPC` var in `.env` using Arbitrum RPC url.
+Setup `ARBITRUM_GOERLI_RPC` var in `.env` using Arbitrum Goerli RPC url (for testnet deployment).
+Setup `ARBISCAN_API_KEY` var in `.env` using Arbitrum RPC url (for contract source verification).
 
-Then, to load the variables in the .env file call
-```
-source .env
-```
+Then, run deployemnt script.
 
-To deploy and verify MagicSwapV2 contracts run
+For Arbitrum mainnet:
 ```
-forge script script/MagicswapV2.s.sol:MagicswapV2Script --rpc-url $ARBITRUM_RPC --broadcast --verify -vvvv
+sh ./sh/deployArbitrum.sh
+```
+For Arbitrum Goerli testnet:
+```
+sh ./sh/deployArbitrumGoerli.sh
 ```
 
 To deploy and verify Staking Contracts run
@@ -47,7 +50,6 @@ To deploy and verify Staking Contracts run
 forge script script/StakingContract.s.sol:StakingContractScript --rpc-url $ARBITRUM_RPC --broadcast --verify -vvvv
 ```
 
-To simulate deployment (dry run), remove `--broadcast` option from above.
-
+To simulate deployment (dry run), remove `--broadcast` option.
 
 For questions reach out to [@ghoul-sol](https://github.com/ghoul-sol)
