@@ -29,10 +29,10 @@ forge test -vvv
 ```
 
 ## Deploy
-Setup `PRIVATE_KEY` var in `.env` using deployer's private key.
-Setup `ARBITRUM_RPC` var in `.env` using Arbitrum RPC url.
-Setup `ARBITRUM_GOERLI_RPC` var in `.env` using Arbitrum Goerli RPC url (for testnet deployment).
-Setup `ARBISCAN_API_KEY` var in `.env` using Arbitrum RPC url (for contract source verification).
+- Setup `PRIVATE_KEY` var in `.env` using deployer's private key.
+- Setup `ARBITRUM_RPC` var in `.env` using Arbitrum RPC url.
+- Setup `ARBITRUM_GOERLI_RPC` var in `.env` using Arbitrum Goerli RPC url (for testnet deployment).
+- Setup `ARBISCAN_API_KEY` var in `.env` using Arbitrum RPC url (for contract source verification).
 
 Then, run deployemnt script.
 
