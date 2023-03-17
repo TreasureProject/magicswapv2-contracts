@@ -122,24 +122,25 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         address _token0 = token0;
         address _token1 = token1;
 
-        // optimistically set to amount0In
-        address feeToken = _token0;
-        uint256 amount = amount0In;
+        for (uint8 i = 0; i < 2; i++) {
+            address feeToken = i == 0 ? _token0 : _token1;
+            uint256 swapAmount = i == 0 ? amount0In : amount1In;
 
-        // if amount1In is an input token, use that instead
-        if (amount1In > 0) {
-            feeToken = _token1;
-            amount = amount1In;
-        }
+            if (swapAmount > 0) {
+                uint256 royaltiesFeeAmount = swapAmount * royaltiesFee / BASIS_POINTS;
 
-        // send royalties
-        if (amount > 0 && royaltiesFee > 0) {
-            _safeTransfer(feeToken, royaltiesBeneficiary, amount * royaltiesFee / BASIS_POINTS);
-        }
+                // send royalties
+                if (royaltiesFeeAmount > 0) {
+                    _safeTransfer(feeToken, royaltiesBeneficiary, royaltiesFeeAmount);
+                }
 
-        // send protocol fee
-        if (amount > 0 && protocolFee > 0) {
-            _safeTransfer(feeToken, protocolFeeBeneficiary, amount * protocolFee / BASIS_POINTS);
+                uint256 protocolFeeAmount = swapAmount * protocolFee / BASIS_POINTS;
+
+                // send protocol fee
+                if (protocolFeeAmount > 0) {
+                    _safeTransfer(feeToken, protocolFeeBeneficiary, protocolFeeAmount);
+                }
+            }
         }
 
         balance0 = IERC20(_token0).balanceOf(address(this));
