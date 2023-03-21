@@ -210,9 +210,20 @@ contract MagicSwapV2RouterTest is Test {
         vm.expectRevert(IMagicSwapV2Router.WrongAmounts.selector);
         magicSwapV2Router.withdrawVault(_collection3, _tokenId2, _amount2, vault2, user4);
 
-        uint256 amountBurned2 = magicSwapV2Router.withdrawVault(_collection2, _tokenId2, _amount2, vault2, user4);
+        uint256 leftover = vault2.ONE() - vault2.LAST_NFT_AMOUNT();
+        IERC20(address(vault2)).transfer(user4, leftover + 1);
+
+        vm.expectRevert("ERC20: burn amount exceeds balance");
+        magicSwapV2Router.withdrawVault(_collection2, _tokenId2, _amount2, vault2, user4);
         vm.stopPrank();
-        assertEq(amountBurned2, amountMinted2);
+
+        vm.prank(user4);
+        IERC20(address(vault2)).transfer(user2, 1);
+
+        vm.prank(user2);
+        uint256 amountBurned2 = magicSwapV2Router.withdrawVault(_collection2, _tokenId2, _amount2, vault2, user4);
+
+        assertEq(amountBurned2 + leftover, amountMinted2);
         assertEq(IERC20(address(vault2)).balanceOf(user2), 0);
         assertEq(IERC20(address(vault2)).balanceOf(address(vault2)), 0);
 

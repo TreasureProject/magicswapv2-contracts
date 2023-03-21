@@ -67,11 +67,21 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _from,
         address _to
     ) internal returns (uint256 amountBurned) {
+        IERC20 vaultToken = IERC20(address(_vault));
         uint256 amountToBurn = nftAmountToERC20(_amount);
+        uint256 fromBalance = vaultToken.balanceOf(_from);
+        uint256 totalSupply = vaultToken.totalSupply();
+
+        /// @dev if user withdraws all NFT tokens but does not have totalSupply of ERC20 tokens (some are locked
+        ///      in UniV2 pool), we optimistically assume that user has enough and adjust `amountToBurn`
+        ///      to user balance. If user balance does not meet required minimum then Vault will revert anyway.
+        if (amountToBurn == totalSupply && fromBalance < totalSupply) {
+            amountToBurn = fromBalance;
+        }
 
         if (_from == address(this)) _approveIfNeeded(address(_vault), amountToBurn);
 
-        IERC20(address(_vault)).transferFrom(_from, address(_vault), amountToBurn);
+        vaultToken.transferFrom(_from, address(_vault), amountToBurn);
         amountBurned = _vault.withdrawBatch(_to, _collection, _tokenId, _amount);
 
         if (amountToBurn != amountBurned) revert WrongAmounts();
