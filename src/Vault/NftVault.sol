@@ -40,8 +40,8 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     /// @param _symbol symbol of ERC20 Vault token
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {
         ONE = 10 ** decimals();
-        /// @dev last NFT can be redeemed for 99%
-        LAST_NFT_AMOUNT = ONE * 99 / 100;
+        /// @dev last NFT can be redeemed for 99.9%
+        LAST_NFT_AMOUNT = ONE * 999 / 1000;
     }
 
     /// @inheritdoc INftVault
