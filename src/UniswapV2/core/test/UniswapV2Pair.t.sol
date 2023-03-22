@@ -116,14 +116,15 @@ contract UniswapV2PairTest is Test {
         returns (uint256 amountOut)
     {
         (uint112 reserve0, uint112 reserve1,) = UniswapV2Pair(_pair).getReserves();
-        if (_amount0In > 0) {
+        token0.mint(_pair, _amount0In);
+        token1.mint(_pair, _amount1In);
+
+        if (_amount0In > _amount1In) {
             uint256 amount1Out = UniswapV2Library.getAmountOut(_amount0In, reserve0, reserve1, _pair, address(factory));
-            token0.mint(_pair, _amount0In);
             UniswapV2Pair(_pair).swap(0, amount1Out, _to, bytes(""));
             amountOut = amount1Out;
         } else {
             uint256 amount0Out = UniswapV2Library.getAmountOut(_amount1In, reserve1, reserve0, _pair, address(factory));
-            token1.mint(_pair, _amount1In);
             UniswapV2Pair(_pair).swap(amount0Out, 0, _to, bytes(""));
             amountOut = amount0Out;
         }
@@ -253,11 +254,15 @@ contract UniswapV2PairTest is Test {
         assertEq(token0.balanceOf(protocolBeneficiary), 0);
         uint256 protocolFeeAmount = _amount0In * protocolBeneficiaryFee / 10000;
 
-        uint256 amount1Out = _swap(address(pairWithFees), _amount0In, 0, user1);
+        uint256 hijackAmount = 1;
+
+        uint256 amount1Out = _swap(address(pairWithFees), _amount0In, hijackAmount, user1);
         assertEq(token0.balanceOf(user1), 0);
         assertEq(token1.balanceOf(user1), amount1Out);
         assertEq(token0.balanceOf(beneficiary), royaltiesAmount);
         assertEq(token0.balanceOf(protocolBeneficiary), protocolFeeAmount);
+        assertEq(token1.balanceOf(beneficiary), hijackAmount * royalties / 10000);
+        assertEq(token1.balanceOf(protocolBeneficiary), hijackAmount * protocolBeneficiaryFee / 10000);
 
         assertEq(token0.balanceOf(user2), 0);
         assertEq(token1.balanceOf(user2), 0);
