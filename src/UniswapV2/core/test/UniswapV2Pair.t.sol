@@ -227,11 +227,12 @@ contract UniswapV2PairTest is Test {
         _assertPairs(pair, pairOriginal);
     }
 
-    function testSwapWithFees(uint96 _reserve0, uint96 _reserve1, uint72 _amount0In, uint72 _amount1In) public {
+    function testSwapWithFees(uint96 _reserve0, uint96 _reserve1, uint72 _amount0In, uint72 _amount1In, uint256 _hijackAmount) public {
         vm.assume(_reserve0 > 10000e18);
         vm.assume(_reserve1 > 10000e18);
         vm.assume(_amount0In > 0.001e18);
         vm.assume(_amount1In > 0.001e18);
+        vm.assume(_amount0In > _hijackAmount);
 
         _addLiquidity(address(pairWithFees), _reserve0, _reserve1, user3);
         _addLiquidity(address(pairOriginal), _reserve0, _reserve1, user3);
@@ -254,15 +255,13 @@ contract UniswapV2PairTest is Test {
         assertEq(token0.balanceOf(protocolBeneficiary), 0);
         uint256 protocolFeeAmount = _amount0In * protocolBeneficiaryFee / 10000;
 
-        uint256 hijackAmount = 1;
-
-        uint256 amount1Out = _swap(address(pairWithFees), _amount0In, hijackAmount, user1);
+        uint256 amount1Out = _swap(address(pairWithFees), _amount0In, _hijackAmount, user1);
         assertEq(token0.balanceOf(user1), 0);
         assertEq(token1.balanceOf(user1), amount1Out);
         assertEq(token0.balanceOf(beneficiary), royaltiesAmount);
         assertEq(token0.balanceOf(protocolBeneficiary), protocolFeeAmount);
-        assertEq(token1.balanceOf(beneficiary), hijackAmount * royalties / 10000);
-        assertEq(token1.balanceOf(protocolBeneficiary), hijackAmount * protocolBeneficiaryFee / 10000);
+        assertEq(token1.balanceOf(beneficiary), _hijackAmount * royalties / 10000);
+        assertEq(token1.balanceOf(protocolBeneficiary), _hijackAmount * protocolBeneficiaryFee / 10000);
 
         assertEq(token0.balanceOf(user2), 0);
         assertEq(token1.balanceOf(user2), 0);
