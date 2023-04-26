@@ -404,6 +404,93 @@ contract MagicSwapV2RouterTest is Test {
         assertEq(address(magicSwapV2Router).balance, 0);
     }
 
+    function testAddLiquidityNFTNFT(uint256 _tokenId, uint256 _amount) public {
+        vm.assume(_tokenId < type(uint256).max - 100);
+        vm.assume(_amount > 0);
+        // UniswapV2Pair balance is using uint112
+        // and amount of NFTs is multiplied by 1e18 when transformed to ERC20
+        // and we are depositing multple NFTs
+        // so trying to avoid overflow revert
+        vm.assume(_amount < type(uint112).max / ONE / 10);
+
+        // user1 liquidity deposit
+        collectionArray = [address(nft1), address(nft1)];
+        tokenIdArray = [_tokenId++, _tokenId++];
+        amountArray = [uint256(1), 1];
+
+        (address[] memory _collectionA1, uint256[] memory _tokenIdA1, uint256[] memory _amountA1) = _mintTokens(user1);
+
+        collectionArray = [address(nft2), address(nft2)];
+        tokenIdArray = [_tokenId++, _tokenId++];
+        amountArray = [_amount++, _amount++];
+        
+        (address[] memory _collectionB1, uint256[] memory _tokenIdB1, uint256[] memory _amountB1) = _mintTokens(user1);
+
+        vm.prank(user1);
+        (uint256 amountA1, uint256 amountB1, uint256 lpAmount1) = magicSwapV2Router.addLiquidityNFTNFT(
+            _collectionA1,
+            _tokenIdA1,
+            _amountA1,
+            vault1,
+            _collectionB1,
+            _tokenIdB1,
+            _amountB1,
+            vault2,
+            user1,
+            block.timestamp
+        );
+
+        assertEq(amountA1, magicSwapV2Router.nftAmountToERC20(_amountA1));
+        assertEq(amountB1, magicSwapV2Router.nftAmountToERC20(_amountB1));
+
+        address pair = UniswapV2Library.pairFor(address(factory), address(vault1), address(vault2));
+        assertEq(IERC20(address(vault2)).balanceOf(pair), amountB1);
+
+        _checkNftBalances(_collectionA1, _tokenIdA1, _amountA1, address(vault1));
+        _checkNftBalances(_collectionB1, _tokenIdB1, _amountB1, address(vault2));
+
+        assertEq(IERC20(pair).balanceOf(user1), lpAmount1);
+
+        // user2 liquidity deposit
+        collectionArray = [address(nft1), address(nft1)];
+        tokenIdArray = [_tokenId++, _tokenId++];
+        amountArray = [uint256(1), 1];
+
+        (address[] memory _collectionA2, uint256[] memory _tokenIdA2, uint256[] memory _amountA2) = _mintTokens(user2);
+
+        collectionArray = [address(nft2), address(nft2)];
+        tokenIdArray = [_tokenId++, _tokenId++];
+        amountArray = [_amount++, _amount++];
+        
+        (address[] memory _collectionB2, uint256[] memory _tokenIdB2, uint256[] memory _amountB2) = _mintTokens(user2);
+
+        uint256 prevBalance = IERC20(address(vault2)).balanceOf(pair);
+
+        vm.prank(user2);
+        (uint256 amountA2, uint256 amountB2, uint256 lpAmount2) = magicSwapV2Router.addLiquidityNFTNFT(
+            _collectionA2,
+            _tokenIdA2,
+            _amountA2,
+            vault1,
+            _collectionB2,
+            _tokenIdB2,
+            _amountB2,
+            vault2,
+            user2,
+            block.timestamp
+        );
+
+        assertEq(amountA2, magicSwapV2Router.nftAmountToERC20(_amountA2));
+        assertEq(amountB2, magicSwapV2Router.nftAmountToERC20(_amountB2));
+
+        assertEq(IERC20(address(vault2)).balanceOf(pair), amountB1 + amountB2);
+
+        _checkNftBalances(_collectionA2, _tokenIdA2, _amountA2, address(vault2));
+        _checkNftBalances(_collectionB2, _tokenIdB2, _amountB2, address(vault2));
+
+        assertEq(IERC20(pair).balanceOf(user2), lpAmount2);
+    }
+
     function testRemoveLiquidityNFT(uint256 _tokenId, uint256 _amount) public {
         vm.assume(_tokenId < type(uint256).max - 100);
         vm.assume(_amount > 0);
