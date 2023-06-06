@@ -42,6 +42,16 @@ contract NftVaultFactory is INftVaultFactory, AccessControl {
         _grantRole(MAGICSWAP_VAULT_CREATOR_ROLE, msg.sender);
     }
 
+    function grantVaultCreator(address _user) external onlyRole(MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE) {
+        //Grant the user the creator role
+        _grantRole(MAGICSWAP_VAULT_CREATOR_ROLE, _user);
+    }
+
+    function revokeVaultCreator(address _user) external onlyRole(MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE) {
+        //Revoke the user the creator role
+        _revokeRole(MAGICSWAP_VAULT_CREATOR_ROLE, _user);
+    }
+
     /// @inheritdoc INftVaultFactory
     function getAllVaults() external view returns (address[] memory) {
         return vaults.values();

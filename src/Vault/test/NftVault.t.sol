@@ -111,7 +111,7 @@ contract NftVaultTest is Test {
             tokenIds: erc721tokenIdsDuplicated
         });
 
-        nftVaultFactory.grantRole(keccak256("MAGICSWAP_VAULT_CREATOR"), owner);
+        nftVaultFactory.addVaultCreator(owner);
     }
 
     function _getConfig(uint256 configId) public returns (INftVault.CollectionData[] memory) {
