@@ -27,8 +27,6 @@ contract NftVaultFactory is INftVaultFactory, AccessControl {
     mapping(bytes32 => INftVault) public vaultHashMap;
     mapping(INftVault => uint256) public vaultIdMap;
 
-    mapping(address => bool) public allowedCreators;
-
     constructor(){
         //Set the magicswap creator admin roles admin to itself, so if you are an admin you can add or remove accounts from being an admin
         _setRoleAdmin(MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE, MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE);
