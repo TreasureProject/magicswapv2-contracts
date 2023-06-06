@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.17;
 
+import "lib/openzeppelin-contracts/contracts/access/AccessControl.sol";
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
@@ -8,15 +9,40 @@ import "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 import "./INftVaultFactory.sol";
 import "./NftVault.sol";
 
-contract NftVaultFactory is INftVaultFactory {
+contract NftVaultFactory is INftVaultFactory, AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
     EnumerableSet.AddressSet private vaults;
     EnumerableSet.AddressSet private permissionedVaults;
 
+    //Create the admin for this vault creation role.
+    bytes32 constant MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE = keccak256("MAGICSWAP_VAULT_CREATOR_ADMIN");
+
+    //Create the basic role for creating vaults.
+    bytes32 constant MAGICSWAP_VAULT_CREATOR_ROLE = keccak256("MAGICSWAP_VAULT_CREATOR");
+
+    bool vaultsCreatableByAll;
+
     mapping(bytes32 => INftVault) public vaultHashMap;
     mapping(INftVault => uint256) public vaultIdMap;
+
+    mapping(address => bool) public allowedCreators;
+
+    constructor(){
+        //Set the magicswap creator admin roles admin to itself, so if you are an admin you can add or remove accounts from being an admin
+        _setRoleAdmin(MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE, MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE);
+
+        //Set the admin of the vault creator role to the admin role
+        //This means anyone with the admin role can add or remove users from the creation roles
+        _setRoleAdmin(MAGICSWAP_VAULT_CREATOR_ROLE, MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE);
+
+        //Grant the deployer the admin role
+        _grantRole(MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE, msg.sender);
+
+        //Grant the deployer the creator role
+        _grantRole(MAGICSWAP_VAULT_CREATOR_ROLE, msg.sender);
+    }
 
     /// @inheritdoc INftVaultFactory
     function getAllVaults() external view returns (address[] memory) {
@@ -80,6 +106,8 @@ contract NftVaultFactory is INftVaultFactory {
         address _owner,
         bool _isSoulbound
     ) external returns (INftVault vault) {
+        if(!vaultsCreatableByAll) require(hasRole(MAGICSWAP_VAULT_CREATOR_ROLE, msg.sender), "Sender is not a vault creator.");
+
         bool isPermissionless = _owner == address(0) && !_isSoulbound;
 
         bytes32 vaultHash = hashVault(_collections);
@@ -116,5 +144,9 @@ contract NftVaultFactory is INftVaultFactory {
         }
 
         emit VaultCreated(name, symbol, vault, vaultId, _collections, msg.sender, _owner);
+    }
+
+    function setVaultsCreatableByAll(bool _vaultsCreatableByAll) external onlyRole(MAGICSWAP_VAULT_CREATOR_ADMIN_ROLE) {
+        vaultsCreatableByAll = _vaultsCreatableByAll;
     }
 }

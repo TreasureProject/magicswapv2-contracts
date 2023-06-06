@@ -110,6 +110,8 @@ contract NftVaultTest is Test {
             allowAllIds: false,
             tokenIds: erc721tokenIdsDuplicated
         });
+
+        nftVaultFactory.grantRole(keccak256("MAGICSWAP_VAULT_CREATOR"), owner);
     }
 
     function _getConfig(uint256 configId) public returns (INftVault.CollectionData[] memory) {
@@ -336,6 +338,7 @@ contract NftVaultTest is Test {
 
     function testIsPermissionedIsSoulbound() public {
         INftVault.CollectionData[] memory _collections = _getConfig(4);
+
         vm.prank(owner);
         NftVault vault = NftVault(address(nftVaultFactory.createVault(_collections, owner, true)));
 
