@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
+import "../../CreatorWhitelistRegistry/CreatorWhitelistRegistryConsumer.sol";
+
 import "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 import "../core/interfaces/IUniswapV2Factory.sol";
@@ -12,7 +14,7 @@ import "./interfaces/IUniswapV2Router01.sol";
 import "./libraries/UniswapV2Library.sol";
 import "./interfaces/IWETH.sol";
 
-contract UniswapV2Router02 is IUniswapV2Router01 {
+contract UniswapV2Router02 is IUniswapV2Router01, CreatorWhitelistRegistryConsumer {
     using SafeMath for uint256;
 
     address public immutable override factory;
@@ -43,6 +45,10 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
     ) internal virtual returns (uint256 amountA, uint256 amountB) {
         // create the pair if it doesn't exist yet
         if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
+            if (creatorWhitelistRegistry.useCreatorWhitelistRegistry()){
+                require(creatorWhitelistRegistry.isCreator(msg.sender), "Msg sender is not approved creator!");
+            }
+
             IUniswapV2Factory(factory).createPair(tokenA, tokenB);
         }
         (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);

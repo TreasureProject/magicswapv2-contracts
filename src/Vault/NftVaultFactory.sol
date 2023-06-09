@@ -4,10 +4,11 @@ pragma solidity 0.8.18;
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
+import "../CreatorWhitelistRegistry/CreatorWhitelistRegistryConsumer.sol";
 import "./INftVaultFactory.sol";
 import "./NftVault.sol";
 
-contract NftVaultFactory is INftVaultFactory {
+contract NftVaultFactory is INftVaultFactory, CreatorWhitelistRegistryConsumer {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
@@ -56,6 +57,10 @@ contract NftVaultFactory is INftVaultFactory {
     function createVault(INftVault.CollectionData[] memory _collections) external returns (INftVault vault) {
         bytes32 vaultHash = hashVault(_collections);
         vault = INftVault(vaultHashMap[vaultHash]);
+
+        if (creatorWhitelistRegistry.useCreatorWhitelistRegistry()){
+            require(creatorWhitelistRegistry.isCreator(msg.sender), "Msg sender is not approved creator!");
+        }
 
         // if vault with _collections alredy exists, revert
         if (address(vault) != address(0)) revert VaultAlreadyDeployed();

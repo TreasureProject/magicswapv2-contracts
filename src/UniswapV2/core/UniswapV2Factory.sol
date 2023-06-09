@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 import "lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
+import  "../../CreatorWhitelistRegistry/ICreatorWhitelistRegistry.sol";
 import "./interfaces/IUniswapV2Factory.sol";
 import "./UniswapV2Pair.sol";
 
@@ -12,6 +13,8 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
 
     /// @dev Fee is denominated in basis points so 5000 / 10000 = 50%
     uint256 public constant MAX_FEE = 5000;
+
+    ICreatorWhitelistRegistry creatorWhitelistRegistry;
 
     address public protocolFeeBeneficiary;
 
@@ -26,6 +29,12 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
 
         setDefaultFees(startFees);
         setProtocolFeeBeneficiary(_protocolFeeBeneficiary);
+    }
+
+    /// @dev Sets the creator whitelist registry address.
+    /// @param _creatorWhitelistRegistryAddress The address of the registry.
+    function setCreatorWhitelistRegistryAddress(address _creatorWhitelistRegistryAddress) external onlyOwner{
+        creatorWhitelistRegistry = ICreatorWhitelistRegistry(_creatorWhitelistRegistryAddress);
     }
 
     /// @inheritdoc IUniswapV2Factory
@@ -70,6 +79,10 @@ contract UniswapV2Factory is IUniswapV2Factory, Ownable2Step {
     }
 
     function createPair(address tokenA, address tokenB) external returns (address pair) {
+        if (creatorWhitelistRegistry.useCreatorWhitelistRegistry()){
+            require(creatorWhitelistRegistry.isCreator(msg.sender), "Msg sender is not approved creator!");
+        }
+
         require(tokenA != tokenB, "MagicswapV2: IDENTICAL_ADDRESSES");
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         require(token0 != address(0), "MagicswapV2: ZERO_ADDRESS");
