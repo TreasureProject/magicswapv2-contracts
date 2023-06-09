@@ -8,8 +8,12 @@ import "lib/ERC20Mintable.sol";
 import "../UniswapV2Factory.sol";
 import "../../periphery/libraries/UniswapV2Library.sol";
 
+import "../../../CreatorWhitelistRegistry/CreatorWhitelistRegistry.sol";
+
 contract UniswapV2FactoryTest is Test {
     UniswapV2Factory factory;
+
+    CreatorWhitelistRegistry creatorWhitelistRegistry;
 
     address pool1;
     address hacker = address(10000004);
@@ -31,8 +35,16 @@ contract UniswapV2FactoryTest is Test {
     event ProtocolFeeBeneficiarySet(address beneficiary);
 
     function setUp() public {
-        vm.prank(owner);
+        vm.startPrank(owner);
         factory = new UniswapV2Factory(0, 0, protocolFeeBeneficiary);
+
+        creatorWhitelistRegistry = new CreatorWhitelistRegistry();
+
+        factory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
+
+        creatorWhitelistRegistry.grantCreator(0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496);
+
+        vm.stopPrank();
 
         MAX_FEE = factory.MAX_FEE();
         tooBigFee = MAX_FEE + 1;

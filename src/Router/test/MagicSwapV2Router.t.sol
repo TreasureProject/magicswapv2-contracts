@@ -13,6 +13,8 @@ import "../MagicSwapV2Router.sol";
 import "../../UniswapV2/core/UniswapV2Factory.sol";
 import "../../Vault/NftVaultFactory.sol";
 
+import "../../CreatorWhitelistRegistry/CreatorWhitelistRegistry.sol";
+
 contract MagicSwapV2RouterTest is Test {
     WETH weth;
     UniswapV2Factory factory;
@@ -20,6 +22,8 @@ contract MagicSwapV2RouterTest is Test {
     NftVaultFactory nftVaultFactory;
     ERC721Mintable nft1;
     ERC1155Mintable nft2;
+    CreatorWhitelistRegistry creatorWhitelistRegistry = new CreatorWhitelistRegistry();
+
 
     uint256 ONE;
 
@@ -54,6 +58,16 @@ contract MagicSwapV2RouterTest is Test {
         magicSwapV2Router = new MagicSwapV2Router(address(factory), address(weth));
 
         nftVaultFactory = new NftVaultFactory();
+
+        creatorWhitelistRegistry.grantCreator(user1);
+        creatorWhitelistRegistry.grantCreator(user2);
+        creatorWhitelistRegistry.grantCreator(user3);
+        creatorWhitelistRegistry.grantCreator(user4);
+        creatorWhitelistRegistry.grantCreator(address(magicSwapV2Router));
+
+        magicSwapV2Router.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
+        nftVaultFactory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
+        factory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
 
         collectionERC721all = INftVault.CollectionData({
             addr: address(new ERC721Mintable()),

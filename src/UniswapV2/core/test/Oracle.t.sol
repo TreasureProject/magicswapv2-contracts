@@ -10,6 +10,8 @@ import "../../periphery/libraries/UniswapV2Library.sol";
 import "../../periphery/libraries/OracleLibrary.sol";
 import "../UniswapV2Factory.sol";
 
+import "../../../CreatorWhitelistRegistry/CreatorWhitelistRegistry.sol";
+
 contract OracleImpl {
     function consult(address pair, uint32 period) public view returns (uint256) {
         return OracleLibrary.consult(pair, period);
@@ -20,6 +22,8 @@ contract OracleTest is Test {
     uint256 public constant TIMESTAMP = 1668642357;
     uint256 public constant BLOCKTIME = 15;
     uint256 public START_PRICE;
+
+    CreatorWhitelistRegistry creatorWhitelistRegistry;
 
     UniswapV2Pair public pair;
     UniswapV2Factory factory;
@@ -36,6 +40,9 @@ contract OracleTest is Test {
         vm.warp(TIMESTAMP);
 
         factory = new UniswapV2Factory(150, 30, protocolFeeBeneficiary);
+        creatorWhitelistRegistry = new CreatorWhitelistRegistry();
+
+        factory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
 
         pair = UniswapV2Pair(factory.createPair(address(WETH), address(DAI)));
         WETH.mint(address(pair), 1000e18);

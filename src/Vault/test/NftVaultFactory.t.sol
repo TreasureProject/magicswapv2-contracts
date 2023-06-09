@@ -9,12 +9,15 @@ import "lib/ERC1155Mintable.sol";
 import "../INftVault.sol";
 import "../NftVaultFactory.sol";
 
+import "../../CreatorWhitelistRegistry/CreatorWhitelistRegistry.sol";
+
 contract NftVaultFactoryTest is Test {
     address user1 = address(1001);
     address user2 = address(1002);
     address owner1 = address(1003);
     address owner2 = address(1004);
     address erc721and1155 = address(888999);
+    CreatorWhitelistRegistry creatorWhitelistRegistry;
 
     uint256[] public erc721tokenIds = [1, 6, 15, 22];
     uint256[] public erc721tokenIdsUnsorted = [1, 6, 16, 15, 22];
@@ -106,6 +109,8 @@ contract NftVaultFactoryTest is Test {
             allowAllIds: false,
             tokenIds: erc721tokenIdsDuplicated
         });
+
+        creatorWhitelistRegistry = new CreatorWhitelistRegistry();
     }
 
     function _getConfig(uint256 configId) public returns (INftVault.CollectionData[] memory) {
@@ -147,6 +152,8 @@ contract NftVaultFactoryTest is Test {
     function testVaultAlreadyDeployed() public {
         NftVaultFactory vaultFactory = new NftVaultFactory();
 
+        vaultFactory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
+
         INftVault.CollectionData[] memory _collections = _getConfig(0);
 
         vaultFactory.createVault(_collections);
@@ -158,6 +165,7 @@ contract NftVaultFactoryTest is Test {
     function testAllGetters() public {
         NftVaultFactory vaultFactory = new NftVaultFactory();
 
+        vaultFactory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
         address[] memory vaults = new address[](8);
 
         for (uint256 configId = 0; configId < 8; configId++) {

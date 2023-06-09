@@ -10,11 +10,15 @@ import "../../periphery/libraries/UniswapV2Library.sol";
 import "../UniswapV2Factory.sol";
 import "./mock/UniswapV2PairOriginal.sol";
 
+import "../../../CreatorWhitelistRegistry/CreatorWhitelistRegistry.sol";
+
 contract UniswapV2PairTest is Test {
     UniswapV2Pair pair;
     UniswapV2Pair pairWithFees;
     UniswapV2PairOriginal pairOriginal;
     UniswapV2Factory factory;
+
+    CreatorWhitelistRegistry creatorWhitelistRegistry;
 
     ERC20Mintable token0;
     ERC20Mintable token1;
@@ -38,6 +42,11 @@ contract UniswapV2PairTest is Test {
         token1 = ERC20Mintable(tokenB);
 
         factory = new UniswapV2Factory(0, 30, protocolFeeBeneficiary);
+
+        creatorWhitelistRegistry = new CreatorWhitelistRegistry();
+
+        factory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
+        creatorWhitelistRegistry.grantCreator(address(factory));
 
         vm.startPrank(address(factory));
 

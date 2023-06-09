@@ -10,8 +10,11 @@ import "../INftVault.sol";
 import "../NftVault.sol";
 import "../NftVaultFactory.sol";
 
+import "../../CreatorWhitelistRegistry/CreatorWhitelistRegistry.sol";
+
 contract NftVaultTest is Test {
     NftVaultFactory public nftVaultFactory = new NftVaultFactory();
+    CreatorWhitelistRegistry creatorWhitelistRegistry = new CreatorWhitelistRegistry();
 
     address user1 = address(1001);
     address user2 = address(1002);
@@ -108,6 +111,8 @@ contract NftVaultTest is Test {
             allowAllIds: false,
             tokenIds: erc721tokenIdsDuplicated
         });
+
+        nftVaultFactory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
     }
 
     function _getConfig(uint256 configId) public returns (INftVault.CollectionData[] memory) {
