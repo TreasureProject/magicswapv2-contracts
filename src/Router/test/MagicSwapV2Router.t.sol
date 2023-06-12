@@ -427,29 +427,39 @@ contract MagicSwapV2RouterTest is Test {
         (address[] memory _collectionB1, uint256[] memory _tokenIdB1, uint256[] memory _amountB1) = _mintTokens(user1);
 
         vm.prank(user1);
-        (uint256 amountA1, uint256 amountB1, uint256 lpAmount1) = magicSwapV2Router.addLiquidityNFTNFT(
-            _collectionA1,
-            _tokenIdA1,
-            _amountA1,
-            vault1,
-            _collectionB1,
-            _tokenIdB1,
-            _amountB1,
-            vault2,
-            user1,
-            block.timestamp
-        );
 
-        assertEq(amountA1, magicSwapV2Router.nftAmountToERC20(_amountA1));
-        assertEq(amountB1, magicSwapV2Router.nftAmountToERC20(_amountB1));
+        address pair;
+        uint256 amountB1;
 
-        address pair = UniswapV2Library.pairFor(address(factory), address(vault1), address(vault2));
-        assertEq(IERC20(address(vault2)).balanceOf(pair), amountB1);
+        {
+            
+            (uint256 amountA1, uint256 __amountB1, uint256 lpAmount1) = magicSwapV2Router.addLiquidityNFTNFT(
+                _collectionA1,
+                _tokenIdA1,
+                _amountA1,
+                vault1,
+                _collectionB1,
+                _tokenIdB1,
+                _amountB1,
+                vault2,
+                user1,
+                block.timestamp
+            );
 
-        _checkNftBalances(_collectionA1, _tokenIdA1, _amountA1, address(vault1));
-        _checkNftBalances(_collectionB1, _tokenIdB1, _amountB1, address(vault2));
+            amountB1 = __amountB1;
 
-        assertEq(IERC20(pair).balanceOf(user1), lpAmount1);
+            assertEq(amountA1, magicSwapV2Router.nftAmountToERC20(_amountA1));
+            assertEq(amountB1, magicSwapV2Router.nftAmountToERC20(_amountB1));
+
+            pair = UniswapV2Library.pairFor(address(factory), address(vault1), address(vault2));
+            assertEq(IERC20(address(vault2)).balanceOf(pair), amountB1);
+
+            _checkNftBalances(_collectionA1, _tokenIdA1, _amountA1, address(vault1));
+            _checkNftBalances(_collectionB1, _tokenIdB1, _amountB1, address(vault2));
+
+            assertEq(IERC20(pair).balanceOf(user1), lpAmount1);
+
+        }
 
         // user2 liquidity deposit
         collectionArray = [address(nft1), address(nft1)];
@@ -463,8 +473,6 @@ contract MagicSwapV2RouterTest is Test {
         amountArray = [_amount++, _amount++];
         
         (address[] memory _collectionB2, uint256[] memory _tokenIdB2, uint256[] memory _amountB2) = _mintTokens(user2);
-
-        uint256 prevBalance = IERC20(address(vault2)).balanceOf(pair);
 
         vm.prank(user2);
         (uint256 amountA2, uint256 amountB2, uint256 lpAmount2) = magicSwapV2Router.addLiquidityNFTNFT(
