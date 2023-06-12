@@ -5,6 +5,7 @@ import "forge-std/Script.sol";
 import "../src/Vault/NftVaultFactory.sol";
 import "../src/UniswapV2/core/UniswapV2Factory.sol";
 import "../src/Router/MagicSwapV2Router.sol";
+import "../src/CreatorWhitelistRegistry/CreatorWhitelistRegistry.sol";
 
 contract MagicswapV2Script is Script {
     function run() public {
@@ -18,10 +19,16 @@ contract MagicswapV2Script is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        UniswapV2Factory factory = new UniswapV2Factory(protocolFee, lpFee, protocolFeeBeneficiary);
-        new MagicSwapV2Router(address(factory), WETH);
+        
+        CreatorWhitelistRegistry creatorWhitelistRegistry = new CreatorWhitelistRegistry();
 
-        new NftVaultFactory();
+        UniswapV2Factory factory = new UniswapV2Factory(protocolFee, lpFee, protocolFeeBeneficiary);
+        MagicSwapV2Router magicSwapV2Router = new MagicSwapV2Router(address(factory), WETH);
+        NftVaultFactory nftVaultFactory = new NftVaultFactory();
+
+        factory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
+        magicSwapV2Router.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
+        nftVaultFactory.setCreatorWhitelistRegistryAddress(address(creatorWhitelistRegistry));
 
         vm.stopBroadcast();
     }
