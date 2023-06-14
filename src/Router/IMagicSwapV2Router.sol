@@ -21,6 +21,32 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
         uint256[] amount;
     }
 
+    /// @notice Emitted when NFT-ERC20 liquidity is added
+    /// @param to address that receives LP tokens
+    /// @param pair address of pair where NFTs are deposited
+    /// @param vault vault data of deposited NFTs
+    event NFTLiquidityAdded(address indexed to, address pair, NftVaultLiquidityData vault);
+
+    /// @notice Emitted when NFT-NFT liquidity is added
+    /// @param to address that receives LP tokens
+    /// @param pair address of pair where NFTs are deposited
+    /// @param vaultA vault data of deposited NFTs for first side
+    /// @param vaultB vault data of deposited NFTs for second side
+    event NFTNFTLiquidityAdded(address indexed to, address pair, NftVaultLiquidityData vaultA, NftVaultLiquidityData vaultB);
+
+    /// @notice Emitted when NFT-ERC20 liquidity is removed
+    /// @param to address that receives withdrawn assets
+    /// @param pair address of pair where NFTs are withdrawn
+    /// @param vault vault data of withdrawn NFTs
+    event NFTLiquidityRemoved(address indexed to, address pair, NftVaultLiquidityData vault);
+
+    /// @notice Emitted when NFT-NFT liquidity is removed
+    /// @param to address that receives withdrawn assets
+    /// @param pair address of pair where NFTs are withdrawn
+    /// @param vaultA vault data of withdrawn NFTs for first side
+    /// @param vaultB vault data of withdrawn NFTs for second side
+    event NFTNFTLiquidityRemoved(address indexed to, address pair, NftVaultLiquidityData vaultA, NftVaultLiquidityData vaultB);
+
     /// @notice Deposit NFTs to vault
     /// @dev All NFTs must be approved for transfer. `_collection`, `_tokenId`
     ///      and `_amount` must be of the same length.
@@ -56,12 +82,9 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     ) external returns (uint256 amountBurned);
 
     /// @notice Add liquidity to UniV2 pool using NFTs and second ERC20 token
-    /// @dev All NFTs and ERC20 token must be approved for transfer. `_collection`, `_tokenId`
-    ///      and `_amount` must be of the same length.
-    /// @param _collection list of NFT addresses to deposit as liquidity
-    /// @param _tokenId list of token IDs to deposit as liquidity
-    /// @param _amount list of token amounts to deposit as liquidity. For ERC721 amount is always 1.
-    /// @param _tokenA address of token A. TokenA is always a vault.
+    /// @dev All NFTs and ERC20 token must be approved for transfer. `_vault.collection`,
+    ///      `_vault.tokenId` and `_vault.amount` must be of the same length.
+    /// @param _vault vault data for NFTs to deposit as liquidity
     /// @param _tokenB address of token B
     /// @param _amountBDesired desired amount of token B to be added as liquidity
     /// @param _amountBMin minimum amount of token B to be added as liquidity
@@ -71,10 +94,7 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @return amountB amount of token B added as liquidity
     /// @return lpAmount amount of LP token minted and sent to `_to`
     function addLiquidityNFT(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _tokenA,
+        NftVaultLiquidityData calldata _vault,
         address _tokenB,
         uint256 _amountBDesired,
         uint256 _amountBMin,
@@ -83,12 +103,9 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     ) external returns (uint256 amountA, uint256 amountB, uint256 lpAmount);
 
     /// @notice Add liquidity to UniV2 pool using NFTs and ETH
-    /// @dev All NFTs token must be approved for transfer. `_collection`, `_tokenId`
-    ///      and `_amount` must be of the same length.
-    /// @param _collection list of NFT addresses to deposit as liquidity
-    /// @param _tokenId list of token IDs to deposit as liquidity
-    /// @param _amount list of token amounts to deposit as liquidity. For ERC721 amount is always 1.
-    /// @param _token address of vault token. It's the same as "Token A".
+    /// @dev All NFTs and ERC20 token must be approved for transfer. `_vault.collection`,
+    ///      `_vault.tokenId` and `_vault.amount` must be of the same length.
+    /// @param _vault vault data for NFTs to deposit as liquidity
     /// @param _amountETHMin desired amount of ETH to be added as liquidity
     /// @param _to address that gets LP tokens
     /// @param _deadline transaction deadline
@@ -96,52 +113,34 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @return amountETH amount of ETH added as liquidity
     /// @return lpAmount amount of LP token minted and sent to `_to`
     function addLiquidityNFTETH(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _token,
+        NftVaultLiquidityData calldata _vault,
         uint256 _amountETHMin,
         address _to,
         uint256 _deadline
     ) external payable returns (uint256 amountToken, uint256 amountETH, uint256 lpAmount);
 
     /// @notice Add liquidity to UniV2 pool using two NFT vaults
-    /// @dev All NFTs must be approved for transfer. `_collectionA`, `_tokenIdA`
-    ///      and `_amountA` must be of the same length. `_collectionB`,
-    ///      `_tokenIdB` and `_amountB` must be of the same length.
-    /// @param _collectionA list of NFT addresses to deposit as liquidity for first side
-    /// @param _tokenIdA list of token IDs to deposit as liquidity for first side
-    /// @param _amountA list of token amounts to deposit as liquidity for first side. For ERC721 amount is always 1.
-    /// @param _tokenA address of token A. TokenA is always a vault.
-    /// @param _collectionB list of NFT addresses to deposit as liquidity for second side
-    /// @param _tokenIdB list of token IDs to deposit as liquidity for second side
-    /// @param _amountB list of token amounts to deposit as liquidity for second side. For ERC721 amount is always 1.
-    /// @param _tokenB address of token B. TokenB is always a vault.
+    /// @dev All NFTs must be approved for transfer. `_vaultA.collection`,
+    ///      `_vaultA.tokenId` and `_vaultA.amount` must be of the same length.
+    ///      `_vaultB.collection`, `_vaultB.tokenId` and `_vaultB.amount` must be of the same length.
+    /// @param _vaultA vault data for NFTs to deposit as liquidity for first side
+    /// @param _vaultB vault data for NFTs to deposit as liquidity for second side
     /// @param _to address that gets LP tokens
     /// @param _deadline transaction deadline
     /// @return amountA amount of token A added as liquidity
     /// @return amountB amount of token B added as liquidity
     /// @return lpAmount amount of LP token minted and sent to `_to`
     function addLiquidityNFTNFT(
-        address[] memory _collectionA,
-        uint256[] memory _tokenIdA,
-        uint256[] memory _amountA,
-        INftVault _tokenA,
-        address[] memory _collectionB,
-        uint256[] memory _tokenIdB,
-        uint256[] memory _amountB,
-        INftVault _tokenB,
+        NftVaultLiquidityData calldata _vaultA,
+        NftVaultLiquidityData calldata _vaultB,
         address _to,
         uint256 _deadline
     ) external returns (uint256 amountA, uint256 amountB, uint256 lpAmount);
 
     /// @notice Remove liquidity from UniV2 pool and get NFTs and ERC20 token
-    /// @dev Lp token must be approved for transfer. `_collection`, `_tokenId`
-    ///      and `_amount` must be of the same length.
-    /// @param _collection list of NFT addresses to withdraw
-    /// @param _tokenId list of token IDs to withdraw
-    /// @param _amount list of token amounts to withdraw. For ERC721 amount is always 1.
-    /// @param _tokenA address of token A. TokenA is always a vault.
+    /// @dev Lp token must be approved for transfer. `_vault.collection`,
+    ///      `_vault.tokenId` and `_vault.amount` must be of the same length.
+    /// @param _vault vault data for NFTs to withdraw from liquidity
     /// @param _tokenB address of token B
     /// @param _lpAmount amount of LP token to redeem
     /// @param _amountAMin minimum amount of token A to be redeemed
@@ -152,10 +151,7 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @return amountA amount of token A redeemed
     /// @return amountB amount of token B redeemed
     function removeLiquidityNFT(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _tokenA,
+        NftVaultLiquidityData calldata _vault,
         address _tokenB,
         uint256 _lpAmount,
         uint256 _amountAMin,
@@ -166,12 +162,9 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     ) external returns (uint256 amountA, uint256 amountB);
 
     /// @notice Remove liquidity from UniV2 pool and get NFTs and ETH
-    /// @dev Lp token must be approved for transfer. `_collection`, `_tokenId`
-    ///      and `_amount` must be of the same length.
-    /// @param _collection list of NFT addresses to withdraw
-    /// @param _tokenId list of token IDs to withdraw
-    /// @param _amount list of token amounts to withdraw. For ERC721 amount is always 1.
-    /// @param _token address of vault token. It's the same as "Token A".
+    /// @dev Lp token must be approved for transfer. `_vault.collection`,
+    ///      `_vault.tokenId` and `_vault.amount` must be of the same length.
+    /// @param _vault vault data for NFTs to withdraw from liquidity
     /// @param _lpAmount amount of LP token to redeem
     /// @param _amountTokenMin minimum amount of vault token to be redeemed
     /// @param _amountETHMin minimum amount of ETH to be redeemed
@@ -181,10 +174,7 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @return amountToken amount of vault token redeemed
     /// @return amountETH amount of ETH redeemed
     function removeLiquidityNFTETH(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _token,
+        NftVaultLiquidityData calldata _vault,
         uint256 _lpAmount,
         uint256 _amountTokenMin,
         uint256 _amountETHMin,
@@ -194,11 +184,11 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     ) external returns (uint256 amountToken, uint256 amountETH);
 
     /// @notice Remove liquidity from UniV2 pool and get NFTs
-    /// @dev Lp token must be approved for transfer. `_collectionA`, `_tokenIdA`
-    ///      and `_amountA` must be of the same length. `_collectionB`,
-    ///      `_tokenIdB` and `_amountB` must be of the same length.
-    /// @param _vaultA vault data for first side
-    /// @param _vaultB vault data for second side
+    /// @dev Lp token must be approved for transfer. `_vaultA.collection`,
+    ///      `_vaultA.tokenId` and `_vaultA.amount` must be of the same length.
+    ///      `_vaultB.collection`, `_vaultB.tokenId` and `_vaultB.amount` must be of the same length.
+    /// @param _vaultA vault data for NFTs to withdraw from liquidity for first side
+    /// @param _vaultB vault data for NFTs to withdraw from liquidity for second side
     /// @param _lpAmount amount of LP token to redeem
     /// @param _amountAMin minimum amount of token A to be redeemed
     /// @param _amountBMin minimum amount of token B to be redeemed
@@ -207,8 +197,8 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @return amountA amount of token A redeemed
     /// @return amountB amount of token B redeemed
     function removeLiquidityNFTNFT(
-        NftVaultLiquidityData memory _vaultA,
-        NftVaultLiquidityData memory _vaultB,
+        NftVaultLiquidityData calldata _vaultA,
+        NftVaultLiquidityData calldata _vaultB,
         uint256 _lpAmount,
         uint256 _amountAMin,
         uint256 _amountBMin,

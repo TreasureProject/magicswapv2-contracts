@@ -89,81 +89,74 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
 
     /// @inheritdoc IMagicSwapV2Router
     function addLiquidityNFT(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _tokenA,
+        NftVaultLiquidityData calldata _vault,
         address _tokenB,
         uint256 _amountBDesired,
         uint256 _amountBMin,
         address _to,
         uint256 _deadline
     ) external ensure(_deadline) returns (uint256 amountA, uint256 amountB, uint256 lpAmount) {
-        uint256 amountAMinted = _depositVault(_collection, _tokenId, _amount, _tokenA, address(this));
+        uint256 amountAMinted = _depositVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this));
 
         (amountA, amountB) =
-            _addLiquidity(address(_tokenA), _tokenB, amountAMinted, _amountBDesired, amountAMinted, _amountBMin);
+            _addLiquidity(address(_vault.token), _tokenB, amountAMinted, _amountBDesired, amountAMinted, _amountBMin);
 
         require(amountAMinted == amountA, "Wrong amount deposited");
 
-        address pair = UniswapV2Library.pairFor(factory, address(_tokenA), _tokenB);
-        TransferHelper.safeTransfer(address(_tokenA), pair, amountA);
+        address pair = UniswapV2Library.pairFor(factory, address(_vault.token), _tokenB);
+        TransferHelper.safeTransfer(address(_vault.token), pair, amountA);
         TransferHelper.safeTransferFrom(_tokenB, msg.sender, pair, amountB);
         lpAmount = IUniswapV2Pair(pair).mint(_to);
+
+        emit NFTLiquidityAdded(_to, pair, _vault);
     }
 
     /// @inheritdoc IMagicSwapV2Router
     function addLiquidityNFTETH(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _token,
+        NftVaultLiquidityData calldata _vault,
         uint256 _amountETHMin,
         address _to,
         uint256 _deadline
     ) external payable returns (uint256 amountToken, uint256 amountETH, uint256 lpAmount) {
-        uint256 amountMinted = _depositVault(_collection, _tokenId, _amount, _token, address(this));
+        uint256 amountMinted = _depositVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this));
 
-        _approveIfNeeded(address(_token), amountMinted);
+        _approveIfNeeded(address(_vault.token), amountMinted);
 
         (amountToken, amountETH, lpAmount) =
-            _addLiquidityETH(address(_token), amountMinted, amountMinted, _amountETHMin, address(this), _to, _deadline);
+            _addLiquidityETH(address(_vault.token), amountMinted, amountMinted, _amountETHMin, address(this), _to, _deadline);
+
+        address pair = UniswapV2Library.pairFor(factory, address(_vault.token), WETH);
+
+        emit NFTLiquidityAdded(_to, pair, _vault);
     }
 
     /// @inheritdoc IMagicSwapV2Router
     function addLiquidityNFTNFT(
-        address[] memory _collectionA,
-        uint256[] memory _tokenIdA,
-        uint256[] memory _amountA,
-        INftVault _tokenA,
-        address[] memory _collectionB,
-        uint256[] memory _tokenIdB,
-        uint256[] memory _amountB,
-        INftVault _tokenB,
+        NftVaultLiquidityData calldata _vaultA,
+        NftVaultLiquidityData calldata _vaultB,
         address _to,
         uint256 _deadline
     ) external ensure(_deadline) returns (uint256 amountA, uint256 amountB, uint256 lpAmount) {
-        uint256 amountAMinted = _depositVault(_collectionA, _tokenIdA, _amountA, _tokenA, address(this));
-        uint256 amountBMinted = _depositVault(_collectionB, _tokenIdB, _amountB, _tokenB, address(this));
+        uint256 amountAMinted = _depositVault(_vaultA.collection, _vaultA.tokenId, _vaultA.amount, _vaultA.token, address(this));
+        uint256 amountBMinted = _depositVault(_vaultB.collection, _vaultB.tokenId, _vaultB.amount, _vaultB.token, address(this));
 
         (amountA, amountB) =
-            _addLiquidity(address(_tokenA), address(_tokenB), amountAMinted, amountBMinted, amountAMinted, amountBMinted);
+            _addLiquidity(address(_vaultA.token), address(_vaultB.token), amountAMinted, amountBMinted, amountAMinted, amountBMinted);
 
         require(amountAMinted == amountA, "Wrong amount A deposited");
         require(amountBMinted == amountB, "Wrong amount B deposited");
 
-        address pair = UniswapV2Library.pairFor(factory, address(_tokenA), address(_tokenB));
-        TransferHelper.safeTransfer(address(_tokenA), pair, amountA);
-        TransferHelper.safeTransfer(address(_tokenB), pair, amountB);
+        address pair = UniswapV2Library.pairFor(factory, address(_vaultA.token), address(_vaultB.token));
+        TransferHelper.safeTransfer(address(_vaultA.token), pair, amountA);
+        TransferHelper.safeTransfer(address(_vaultB.token), pair, amountB);
         lpAmount = IUniswapV2Pair(pair).mint(_to);
+
+        emit NFTNFTLiquidityAdded(_to, pair, _vaultA, _vaultB);
     }
 
     /// @inheritdoc IMagicSwapV2Router
     function removeLiquidityNFT(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _tokenA,
+        NftVaultLiquidityData calldata _vault,
         address _tokenB,
         uint256 _lpAmount,
         uint256 _amountAMin,
@@ -173,31 +166,32 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         bool _swapLeftover
     ) external returns (uint256 amountA, uint256 amountB) {
         (amountA, amountB) =
-            removeLiquidity(address(_tokenA), _tokenB, _lpAmount, _amountAMin, _amountBMin, address(this), _deadline);
+            removeLiquidity(address(_vault.token), _tokenB, _lpAmount, _amountAMin, _amountBMin, address(this), _deadline);
 
         // withdraw NFTs and send to user
-        uint256 amountBurned = _withdrawVault(_collection, _tokenId, _amount, _tokenA, address(this), _to);
+        uint256 amountBurned = _withdrawVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this), _to);
 
         amountA -= amountBurned;
 
         if (_swapLeftover) {
-            uint256 amountOut = swapLeftover(address(_tokenA), _tokenB, amountA);
+            uint256 amountOut = swapLeftover(address(_vault.token), _tokenB, amountA);
 
             amountA = 0;
             amountB += amountOut;
         } else if (amountA > 0) {
-            TransferHelper.safeTransfer(address(_tokenA), _to, amountA);
+            TransferHelper.safeTransfer(address(_vault.token), _to, amountA);
         }
 
         TransferHelper.safeTransfer(_tokenB, _to, amountB);
+
+        address pair = UniswapV2Library.pairFor(factory, address(_vault.token), _tokenB);
+
+        emit NFTLiquidityRemoved(_to, pair, _vault);
     }
 
     /// @inheritdoc IMagicSwapV2Router
     function removeLiquidityNFTETH(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _token,
+        NftVaultLiquidityData calldata _vault,
         uint256 _lpAmount,
         uint256 _amountTokenMin,
         uint256 _amountETHMin,
@@ -206,30 +200,34 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         bool _swapLeftover
     ) external returns (uint256 amountToken, uint256 amountETH) {
         (amountToken, amountETH) =
-            removeLiquidity(address(_token), WETH, _lpAmount, _amountTokenMin, _amountETHMin, address(this), _deadline);
+            removeLiquidity(address(_vault.token), WETH, _lpAmount, _amountTokenMin, _amountETHMin, address(this), _deadline);
 
         // withdraw NFTs and send to user
-        uint256 amountBurned = _withdrawVault(_collection, _tokenId, _amount, _token, address(this), _to);
+        uint256 amountBurned = _withdrawVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this), _to);
 
         amountToken -= amountBurned;
 
         if (_swapLeftover) {
-            uint256 amountOut = swapLeftover(address(_token), WETH, amountToken);
+            uint256 amountOut = swapLeftover(address(_vault.token), WETH, amountToken);
 
             amountToken = 0;
             amountETH += amountOut;
         } else if (amountToken > 0) {
-            TransferHelper.safeTransfer(address(_token), _to, amountToken);
+            TransferHelper.safeTransfer(address(_vault.token), _to, amountToken);
         }
 
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(_to, amountETH);
+
+        address pair = UniswapV2Library.pairFor(factory, address(_vault.token), WETH);
+
+        emit NFTLiquidityRemoved(_to, pair, _vault);
     }
 
     /// @inheritdoc IMagicSwapV2Router
     function removeLiquidityNFTNFT(
-        NftVaultLiquidityData memory _vaultA,
-        NftVaultLiquidityData memory _vaultB,
+        NftVaultLiquidityData calldata _vaultA,
+        NftVaultLiquidityData calldata _vaultB,
         uint256 _lpAmount,
         uint256 _amountAMin,
         uint256 _amountBMin,
@@ -253,6 +251,10 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         if (amountB > 0) {
             TransferHelper.safeTransfer(address(_vaultB.token), _to, amountB);
         }
+
+        address pair = UniswapV2Library.pairFor(factory, address(_vaultA.token), address(_vaultB.token));
+        
+        emit NFTNFTLiquidityRemoved(_to, pair, _vaultA, _vaultB);
     }
 
     /// @inheritdoc IMagicSwapV2Router
