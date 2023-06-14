@@ -89,27 +89,26 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
 
     /// @inheritdoc IMagicSwapV2Router
     function addLiquidityNFT(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _tokenA,
+        NftVaultLiquidityData calldata _vaultA,
         address _tokenB,
         uint256 _amountBDesired,
         uint256 _amountBMin,
         address _to,
         uint256 _deadline
     ) external ensure(_deadline) returns (uint256 amountA, uint256 amountB, uint256 lpAmount) {
-        uint256 amountAMinted = _depositVault(_collection, _tokenId, _amount, _tokenA, address(this));
+        uint256 amountAMinted = _depositVault(_vaultA.collection, _vaultA.tokenId, _vaultA.amount, _vaultA.token, address(this));
 
         (amountA, amountB) =
-            _addLiquidity(address(_tokenA), _tokenB, amountAMinted, _amountBDesired, amountAMinted, _amountBMin);
+            _addLiquidity(address(_vaultA.token), _tokenB, amountAMinted, _amountBDesired, amountAMinted, _amountBMin);
 
         require(amountAMinted == amountA, "Wrong amount deposited");
 
-        address pair = UniswapV2Library.pairFor(factory, address(_tokenA), _tokenB);
-        TransferHelper.safeTransfer(address(_tokenA), pair, amountA);
+        address pair = UniswapV2Library.pairFor(factory, address(_vaultA.token), _tokenB);
+        TransferHelper.safeTransfer(address(_vaultA.token), pair, amountA);
         TransferHelper.safeTransferFrom(_tokenB, msg.sender, pair, amountB);
         lpAmount = IUniswapV2Pair(pair).mint(_to);
+
+        emit LiquidityAddedNFT(_to, pair, lpAmount, _vaultA, amountA, _tokenB, amountB);
     }
 
     /// @inheritdoc IMagicSwapV2Router

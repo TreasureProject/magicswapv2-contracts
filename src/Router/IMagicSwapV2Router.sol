@@ -21,6 +21,54 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
         uint256[] amount;
     }
 
+    /// @notice Emitted on adding liquidity
+    /// @param to address that gets LP tokens
+    /// @param pair address of the pair where liquidity was added
+    /// @param lpAmount amount of LP tokens minted and sent to address
+    /// @param vaultA vault data for first side of deposit
+    /// @param amountA amount of `tokenA` deposited
+    /// @param tokenB address of token for second side of deposit
+    /// @param amountB amount of `tokenB` deposited
+    event LiquidityAddedNFT(
+        address indexed to,
+        address pair,
+        uint256 lpAmount,
+        NftVaultLiquidityData vaultA,
+        uint256 amountA,
+        address tokenB,
+        uint256 amountB
+    );
+
+    /// @notice Emitted on removing liquidity
+    /// @param to address that gets withdrawn assets
+    /// @param pair address of the pair where liquidity was removed
+    /// @param lpAmount amount of LP tokens withdrawn from the pool and burned
+    /// @param tokenA address of token for first side of deposit
+    /// @param amountA amount of `tokenA` deposited
+    /// @param collectionsA NFT addresses for first side of deposit
+    /// @param tokenIdsA token ids for first side of deposit
+    /// @param tokenB address of token for second side of deposit
+    /// @param amountB amount of `tokenB` deposited
+    /// @param collectionsB NFT addresses for second side of deposit
+    /// @param tokenIdsB token ids for second side of deposit
+    /// @param swappedLeftover true if leftover tokens were swapped to token B
+    event LiquidityRemoved(
+        address indexed to,
+        address pair,
+        uint256 lpAmount,
+        address tokenA,
+        uint256 amountA,
+        address[] collectionsA,
+        uint256[] tokenIdsA,
+        uint256[] amountsA,
+        address tokenB,
+        uint256 amountB,
+        address[] collectionsB,
+        uint256[] tokenIdsB,
+        uint256[] amountsB,
+        bool swappedLeftover
+    );
+
     /// @notice Deposit NFTs to vault
     /// @dev All NFTs must be approved for transfer. `_collection`, `_tokenId`
     ///      and `_amount` must be of the same length.
@@ -58,10 +106,7 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @notice Add liquidity to UniV2 pool using NFTs and second ERC20 token
     /// @dev All NFTs and ERC20 token must be approved for transfer. `_collection`, `_tokenId`
     ///      and `_amount` must be of the same length.
-    /// @param _collection list of NFT addresses to deposit as liquidity
-    /// @param _tokenId list of token IDs to deposit as liquidity
-    /// @param _amount list of token amounts to deposit as liquidity. For ERC721 amount is always 1.
-    /// @param _tokenA address of token A. TokenA is always a vault.
+    /// @param _vaultA address of token A. TokenA is always a vault.
     /// @param _tokenB address of token B
     /// @param _amountBDesired desired amount of token B to be added as liquidity
     /// @param _amountBMin minimum amount of token B to be added as liquidity
@@ -71,10 +116,7 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @return amountB amount of token B added as liquidity
     /// @return lpAmount amount of LP token minted and sent to `_to`
     function addLiquidityNFT(
-        address[] memory _collection,
-        uint256[] memory _tokenId,
-        uint256[] memory _amount,
-        INftVault _tokenA,
+        NftVaultLiquidityData memory _vaultA,
         address _tokenB,
         uint256 _amountBDesired,
         uint256 _amountBMin,
