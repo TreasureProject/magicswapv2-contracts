@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
-import '../../core/interfaces/IUniswapV2Pair.sol';
+import "../../core/interfaces/IUniswapV2Pair.sol";
 
 /// @title Oracle library
 /// @notice Provides functions to integrate with MagicswapV2 pool oracle
@@ -11,7 +11,7 @@ library OracleLibrary {
     /// @param period Number of seconds in the past to start calculating time-weighted average
     /// @return timeWeightedAveragePrice The time-weighted average tick from (block.timestamp - period) to block.timestamp
     function consult(address pool, uint32 period) internal view returns (uint256 timeWeightedAveragePrice) {
-        require(period != 0, 'BP');
+        require(period != 0, "BP");
 
         uint32[] memory secondAgos = new uint32[](2);
         secondAgos[0] = period;

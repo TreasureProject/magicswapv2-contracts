@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
-import "lib/openzeppelin-contracts/contracts/utils/Counters.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 import "./INftVaultFactory.sol";
@@ -13,7 +12,6 @@ contract NftVaultFactory is INftVaultFactory {
     using Strings for uint256;
 
     EnumerableSet.AddressSet private vaults;
-    EnumerableSet.AddressSet private permissionedVaults;
 
     mapping(bytes32 => INftVault) public vaultHashMap;
     mapping(INftVault => uint256) public vaultIdMap;
@@ -24,8 +22,8 @@ contract NftVaultFactory is INftVaultFactory {
     }
 
     /// @inheritdoc INftVaultFactory
-    function getVaultAt(uint256 _i) external view returns (address) {
-        return vaults.at(_i);
+    function getVaultAt(uint256 _index) external view returns (address) {
+        return vaults.at(_index);
     }
 
     /// @inheritdoc INftVaultFactory
@@ -36,26 +34,6 @@ contract NftVaultFactory is INftVaultFactory {
     /// @inheritdoc INftVaultFactory
     function isVault(address _vault) external view returns (bool) {
         return vaults.contains(_vault);
-    }
-
-    /// @inheritdoc INftVaultFactory
-    function getAllPermissionedVaults() external view returns (address[] memory) {
-        return permissionedVaults.values();
-    }
-
-    /// @inheritdoc INftVaultFactory
-    function getPermissionedVaultAt(uint256 _i) external view returns (address) {
-        return permissionedVaults.at(_i);
-    }
-
-    /// @inheritdoc INftVaultFactory
-    function getPermissionedVaultLength() external view returns (uint256) {
-        return permissionedVaults.length();
-    }
-
-    /// @inheritdoc INftVaultFactory
-    function isPermissionedVault(address _vault) external view returns (bool) {
-        return permissionedVaults.contains(_vault);
     }
 
     /// @inheritdoc INftVaultFactory
@@ -75,46 +53,28 @@ contract NftVaultFactory is INftVaultFactory {
     }
 
     /// @inheritdoc INftVaultFactory
-    function createVault(
-        INftVault.CollectionData[] memory _collections,
-        address _owner,
-        bool _isSoulbound
-    ) external returns (INftVault vault) {
-        bool isPermissionless = _owner == address(0) && !_isSoulbound;
-
+    function createVault(INftVault.CollectionData[] memory _collections) external returns (INftVault vault) {
         bytes32 vaultHash = hashVault(_collections);
         vault = INftVault(vaultHashMap[vaultHash]);
 
-        // if vault with _collections alredy exists and is permissionless, revert
-        if (address(vault) != address(0) && isPermissionless) revert VaultAlreadyDeployed();
+        // if vault with _collections alredy exists, revert
+        if (address(vault) != address(0)) revert VaultAlreadyDeployed();
 
         uint256 vaultId;
         string memory name;
         string memory symbol;
 
-        if (isPermissionless) {
-            // permissionless
-            vaultId = vaults.length();
-            name = string.concat("Magic Vault ", vaultId.toString());
-            symbol = string.concat("MagicVault", vaultId.toString());
-        } else {
-            // permissioned
-            vaultId = permissionedVaults.length();
-            name = string.concat("Magic Permissioned Vault ", vaultId.toString());
-            symbol = string.concat("MagicPermissionedVault", vaultId.toString());
-        }
+        vaultId = vaults.length();
+        name = string.concat("Magic Vault ", vaultId.toString());
+        symbol = string.concat("MagicVault", vaultId.toString());
 
-        vault = INftVault(address(new NftVault(name, symbol, _owner, _isSoulbound)));
+        vault = INftVault(address(new NftVault(name, symbol)));
         vault.init(_collections);
 
-        if (isPermissionless) {
-            vaults.add(address(vault));
-            vaultHashMap[vaultHash] = vault;
-            vaultIdMap[vault] = vaultId;
-        } else {
-            permissionedVaults.add(address(vault));
-        }
+        vaults.add(address(vault));
+        vaultHashMap[vaultHash] = vault;
+        vaultIdMap[vault] = vaultId;
 
-        emit VaultCreated(name, symbol, vault, vaultId, _collections, msg.sender, _owner);
+        emit VaultCreated(name, symbol, vault, vaultId, _collections, msg.sender);
     }
 }

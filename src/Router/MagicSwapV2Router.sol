@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "lib/openzeppelin-contracts/contracts/token/ERC1155/IERC1155.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
@@ -10,7 +10,6 @@ import "../UniswapV2/periphery/UniswapV2Router02.sol";
 import "../UniswapV2/core/interfaces/IUniswapV2Pair.sol";
 
 contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
-
     uint256 public constant ONE = 1e18;
 
     constructor(address _factory, address _WETH) UniswapV2Router02(_factory, _WETH) {}
@@ -38,7 +37,9 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
             if (collectionData.nftType == INftVault.NftType.ERC721) {
                 IERC721(_collection[i]).safeTransferFrom(msg.sender, address(_vault), _tokenId[i]);
             } else if (collectionData.nftType == INftVault.NftType.ERC1155) {
-                IERC1155(_collection[i]).safeTransferFrom(msg.sender, address(_vault), _tokenId[i], _amount[i], bytes(""));
+                IERC1155(_collection[i]).safeTransferFrom(
+                    msg.sender, address(_vault), _tokenId[i], _amount[i], bytes("")
+                );
             } else {
                 revert INftVault.UnsupportedNft();
             }
@@ -66,12 +67,24 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _from,
         address _to
     ) internal returns (uint256 amountBurned) {
+        IERC20 vaultToken = IERC20(address(_vault));
         uint256 amountToBurn = nftAmountToERC20(_amount);
+        uint256 fromBalance = vaultToken.balanceOf(_from);
+        uint256 totalSupply = vaultToken.totalSupply();
+
+        /// @dev if user withdraws all NFT tokens but does not have totalSupply of ERC20 tokens (some are locked
+        ///      in UniV2 pool), we optimistically assume that user has enough and adjust `amountToBurn`
+        ///      to user balance. If user balance does not meet required minimum then Vault will revert anyway.
+        if (amountToBurn == totalSupply && fromBalance < totalSupply) {
+            amountToBurn = fromBalance;
+        }
 
         if (_from == address(this)) _approveIfNeeded(address(_vault), amountToBurn);
 
-        IERC20(address(_vault)).transferFrom(_from, address(_vault), amountToBurn);
+        vaultToken.transferFrom(_from, address(_vault), amountToBurn);
         amountBurned = _vault.withdrawBatch(_to, _collection, _tokenId, _amount);
+
+        if (amountToBurn != amountBurned) revert WrongAmounts();
     }
 
     /// @inheritdoc IMagicSwapV2Router
@@ -88,14 +101,8 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
     ) external ensure(_deadline) returns (uint256 amountA, uint256 amountB, uint256 lpAmount) {
         uint256 amountAMinted = _depositVault(_collection, _tokenId, _amount, _tokenA, address(this));
 
-        (amountA, amountB) = _addLiquidity(
-            address(_tokenA),
-            _tokenB,
-            amountAMinted,
-            _amountBDesired,
-            amountAMinted,
-            _amountBMin
-        );
+        (amountA, amountB) =
+            _addLiquidity(address(_tokenA), _tokenB, amountAMinted, _amountBDesired, amountAMinted, _amountBMin);
 
         require(amountAMinted == amountA, "Wrong amount deposited");
 
@@ -119,15 +126,8 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
 
         _approveIfNeeded(address(_token), amountMinted);
 
-        (amountToken, amountETH, lpAmount) = _addLiquidityETH(
-            address(_token),
-            amountMinted,
-            amountMinted,
-            _amountETHMin,
-            address(this),
-            _to,
-            _deadline
-        );
+        (amountToken, amountETH, lpAmount) =
+            _addLiquidityETH(address(_token), amountMinted, amountMinted, _amountETHMin, address(this), _to, _deadline);
     }
 
     /// @inheritdoc IMagicSwapV2Router
@@ -144,34 +144,16 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         uint256 _deadline,
         bool _swapLeftover
     ) external returns (uint256 amountA, uint256 amountB) {
-        (amountA, amountB) = removeLiquidity(
-            address(_tokenA),
-            _tokenB,
-            _lpAmount,
-            _amountAMin,
-            _amountBMin,
-            address(this),
-            _deadline
-        );
+        (amountA, amountB) =
+            removeLiquidity(address(_tokenA), _tokenB, _lpAmount, _amountAMin, _amountBMin, address(this), _deadline);
 
         // withdraw NFTs and send to user
-        uint256 amountBurned = _withdrawVault(
-            _collection,
-            _tokenId,
-            _amount,
-            _tokenA,
-            address(this),
-            _to
-        );
+        uint256 amountBurned = _withdrawVault(_collection, _tokenId, _amount, _tokenA, address(this), _to);
 
         amountA -= amountBurned;
 
         if (_swapLeftover) {
-            uint256 amountOut = swapLeftover(
-                address(_tokenA),
-                _tokenB,
-                amountA
-            );
+            uint256 amountOut = swapLeftover(address(_tokenA), _tokenB, amountA);
 
             amountA = 0;
             amountB += amountOut;
@@ -195,34 +177,16 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         uint256 _deadline,
         bool _swapLeftover
     ) external returns (uint256 amountToken, uint256 amountETH) {
-        (amountToken, amountETH) = removeLiquidity(
-            address(_token),
-            WETH,
-            _lpAmount,
-            _amountTokenMin,
-            _amountETHMin,
-            address(this),
-            _deadline
-        );
+        (amountToken, amountETH) =
+            removeLiquidity(address(_token), WETH, _lpAmount, _amountTokenMin, _amountETHMin, address(this), _deadline);
 
         // withdraw NFTs and send to user
-        uint256 amountBurned = _withdrawVault(
-            _collection,
-            _tokenId,
-            _amount,
-            _token,
-            address(this),
-            _to
-        );
+        uint256 amountBurned = _withdrawVault(_collection, _tokenId, _amount, _token, address(this), _to);
 
         amountToken -= amountBurned;
 
         if (_swapLeftover) {
-            uint256 amountOut = swapLeftover(
-                address(_token),
-                WETH,
-                amountToken
-            );
+            uint256 amountOut = swapLeftover(address(_token), WETH, amountToken);
 
             amountToken = 0;
             amountETH += amountOut;
@@ -248,14 +212,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
 
         _approveIfNeeded(_path[0], amountIn);
 
-        amounts = _swapExactTokensForTokens(
-            amountIn,
-            _amountOutMin,
-            _path,
-            address(this),
-            _to,
-            _deadline
-        );
+        amounts = _swapExactTokensForTokens(amountIn, _amountOutMin, _path, address(this), _to, _deadline);
     }
 
     /// @inheritdoc IMagicSwapV2Router
@@ -268,20 +225,13 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _to,
         uint256 _deadline
     ) external payable returns (uint256[] memory amounts) {
-        require(_path[_path.length - 1] == WETH, 'MagicswapV2Router: INVALID_PATH');
+        require(_path[_path.length - 1] == WETH, "MagicswapV2Router: INVALID_PATH");
 
         uint256 amountIn = _depositVault(_collection, _tokenId, _amount, INftVault(_path[0]), address(this));
 
         _approveIfNeeded(_path[0], amountIn);
 
-        amounts = _swapExactTokensForTokens(
-            amountIn,
-            _amountOutMin,
-            _path,
-            address(this),
-            address(this),
-            _deadline
-        );
+        amounts = _swapExactTokensForTokens(amountIn, _amountOutMin, _path, address(this), address(this), _deadline);
 
         IWETH(WETH).withdraw(amounts[amounts.length - 1]);
         TransferHelper.safeTransferETH(_to, amounts[amounts.length - 1]);
@@ -299,24 +249,10 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
     ) external returns (uint256[] memory amounts) {
         uint256 amountOut = nftAmountToERC20(_amount);
 
-        amounts = _swapTokensForExactTokens(
-            amountOut,
-            _amountInMax,
-            _path,
-            msg.sender,
-            address(this),
-            _deadline
-        );
+        amounts = _swapTokensForExactTokens(amountOut, _amountInMax, _path, msg.sender, address(this), _deadline);
 
         // withdraw NFTs and send to user
-        _withdrawVault(
-            _collection,
-            _tokenId,
-            _amount,
-            INftVault(_path[_path.length - 1]),
-            address(this),
-            _to
-        );
+        _withdrawVault(_collection, _tokenId, _amount, INftVault(_path[_path.length - 1]), address(this), _to);
     }
 
     /// @inheritdoc IMagicSwapV2Router
@@ -330,22 +266,10 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
     ) external payable returns (uint256[] memory amounts) {
         uint256 amountOut = nftAmountToERC20(_amount);
 
-        amounts = swapETHForExactTokens(
-            amountOut,
-            _path,
-            address(this),
-            _deadline
-        );
+        amounts = swapETHForExactTokens(amountOut, _path, address(this), _deadline);
 
         // withdraw NFTs and send to user
-        _withdrawVault(
-            _collection,
-            _tokenId,
-            _amount,
-            INftVault(_path[_path.length - 1]),
-            address(this),
-            _to
-        );
+        _withdrawVault(_collection, _tokenId, _amount, INftVault(_path[_path.length - 1]), address(this), _to);
     }
 
     /// @inheritdoc IMagicSwapV2Router
@@ -366,24 +290,10 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
 
         _approveIfNeeded(_path[0], amountIn);
 
-        amounts = _swapExactTokensForTokens(
-            amountIn,
-            amountOutMin,
-            _path,
-            address(this),
-            address(this),
-            _deadline
-        );
+        amounts = _swapExactTokensForTokens(amountIn, amountOutMin, _path, address(this), address(this), _deadline);
 
         // withdraw NFTs and send to user
-        _withdrawVault(
-            _collectionOut,
-            _tokenIdOut,
-            _amountOut,
-            INftVault(vaultOut),
-            address(this),
-            _to
-        );
+        _withdrawVault(_collectionOut, _tokenIdOut, _amountOut, INftVault(vaultOut), address(this), _to);
 
         uint256 dust = amounts[amounts.length - 1] - amountOutMin;
 
@@ -397,28 +307,19 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
     }
 
     /// @inheritdoc IMagicSwapV2Router
-    function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn)
-        public
-        returns (uint256 amountOut)
-    {
+    function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn) public returns (uint256 amountOut) {
         if (_amountIn == 0) return 0;
 
         address[] memory path = new address[](2);
-        path[0] = address(_tokenA);
+        path[0] = _tokenA;
         path[1] = _tokenB;
 
-        _approveIfNeeded(address(_tokenA), _amountIn);
+        _approveIfNeeded(_tokenA, _amountIn);
 
         // swap leftover to tokenB
         // TODO: can be front-run, issue?
-        uint256[] memory amounts = _swapExactTokensForTokens(
-            _amountIn,
-            1,
-            path,
-            address(this),
-            address(this),
-            block.timestamp
-        );
+        uint256[] memory amounts =
+            _swapExactTokensForTokens(_amountIn, 1, path, address(this), address(this), block.timestamp);
 
         return amounts[1];
     }

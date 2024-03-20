@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 import "forge-std/Test.sol";
 
@@ -55,17 +55,18 @@ contract OracleTest is Test {
 
         (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
         if (_wethIn > 0) {
-            uint256 amount1Out = UniswapV2Library.getAmountOut(_wethIn, reserve0, reserve1, address(pair), address(factory));
+            uint256 amount1Out =
+                UniswapV2Library.getAmountOut(_wethIn, reserve0, reserve1, address(pair), address(factory));
             WETH.mint(address(pair), _wethIn);
             pair.swap(0, amount1Out, user1, bytes(""));
             amountOut = amount1Out;
         } else if (_daiIn > 0) {
-            uint256 amount0Out = UniswapV2Library.getAmountOut(_daiIn, reserve1, reserve0, address(pair), address(factory));
+            uint256 amount0Out =
+                UniswapV2Library.getAmountOut(_daiIn, reserve1, reserve0, address(pair), address(factory));
             DAI.mint(address(pair), _daiIn);
             pair.swap(amount0Out, 0, user1, bytes(""));
             amountOut = amount0Out;
         }
-
     }
 
     function testTokensOrder() public {
@@ -388,7 +389,11 @@ contract OracleTest is Test {
         assertEq(oracleImpl.consult(address(pair), 15), pair.lastPrice());
     }
 
-    function _assertCardinality(uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext) public {
+    function _assertCardinality(
+        uint16 observationIndex,
+        uint16 observationCardinality,
+        uint16 observationCardinalityNext
+    ) public {
         assertEq(pair.observationIndex(), observationIndex);
         assertEq(pair.observationCardinality(), observationCardinality);
         assertEq(pair.observationCardinalityNext(), observationCardinalityNext);
@@ -425,7 +430,9 @@ contract OracleTest is Test {
         _swap(1e18, 0);
         _assertCardinality(3, 10, 10);
 
-        for (uint256 i = 0; i < 6; i++) {_swap(1e18, 0);}
+        for (uint256 i = 0; i < 6; i++) {
+            _swap(1e18, 0);
+        }
         _assertCardinality(9, 10, 10);
 
         _swap(1e18, 0);
@@ -434,13 +441,17 @@ contract OracleTest is Test {
         pair.increaseObservationCardinalityNext(15);
         _assertCardinality(0, 10, 15);
 
-        for (uint256 i = 0; i < 9; i++) {_swap(1e18, 0);}
+        for (uint256 i = 0; i < 9; i++) {
+            _swap(1e18, 0);
+        }
         _assertCardinality(9, 10, 15);
 
         _swap(1e18, 0);
         _assertCardinality(10, 15, 15);
 
-        for (uint256 i = 0; i < 4; i++) {_swap(1e18, 0);}
+        for (uint256 i = 0; i < 4; i++) {
+            _swap(1e18, 0);
+        }
         _assertCardinality(14, 15, 15);
 
         _swap(1e18, 0);

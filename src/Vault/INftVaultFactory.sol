@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.17;
+pragma solidity 0.8.18;
 
 import "./INftVault.sol";
 
@@ -15,11 +15,10 @@ interface INftVaultFactory {
     event VaultCreated(
         string name,
         string symbol,
-        INftVault vault,
-        uint256 vaultId,
+        INftVault indexed vault,
+        uint256 indexed vaultId,
         INftVault.CollectionData[] collections,
-        address creator,
-        address owner
+        address creator
     );
 
     /// @dev Vault does not exist
@@ -37,31 +36,17 @@ interface INftVaultFactory {
     function getAllVaults() external view returns (address[] memory);
 
     /// @notice Get vault by its EnumerableSet vaultId
-    /// @param i vaultId
+    /// @param index vaultId or index in NftVaultFactory.vaults array
     /// @return vault address
-    function getVaultAt(uint256 i) external view returns (address);
+    function getVaultAt(uint256 index) external view returns (address);
 
     /// @return length of vault's EnumerableSet
     function getVaultLength() external view returns (uint256);
 
     /// @notice Returns true if vault has been deployed by factory
     /// @param vault address
+    /// @return true if vault is deployed by the factory
     function isVault(address vault) external view returns (bool);
-
-    /// @return all deployed permissioned vaults
-    function getAllPermissionedVaults() external view returns (address[] memory);
-
-    /// @notice Get permissioned vault by its EnumerableSet vaultId
-    /// @param i vaultId
-    /// @return vault address
-    function getPermissionedVaultAt(uint256 i) external view returns (address);
-
-    /// @return length of permissioned vault's EnumerableSet
-    function getPermissionedVaultLength() external view returns (uint256);
-
-    /// @notice Returns true if permissioned vault has been deployed by factory
-    /// @param vault address
-    function isPermissionedVault(address vault) external view returns (bool);
 
     /// @notice Get vault by it's config
     /// @param collections vault's config
@@ -79,11 +64,8 @@ interface INftVaultFactory {
     function hashVault(INftVault.CollectionData[] memory collections) external pure returns (bytes32);
 
     /// @notice Create new vault
-    /// @dev If vault already exists, function returned already deployed vault
+    /// @dev If vault already exists, function reverts
     /// @param collections vault's config
-    /// @param owner address of owner if vault is permissioned, otherwise address(0) and vault is permissionless
-    /// @param isSoulbound if true, Vault is soulbound and its ERC20 token can only be transfered
-    ///        to `allowedContracts` managed by `owner`
-    /// @return vault address of (newly) deployed vault
-    function createVault(INftVault.CollectionData[] memory collections, address owner, bool isSoulbound) external returns (INftVault vault);
+    /// @return vault address of deployed vault
+    function createVault(INftVault.CollectionData[] memory collections) external returns (INftVault vault);
 }

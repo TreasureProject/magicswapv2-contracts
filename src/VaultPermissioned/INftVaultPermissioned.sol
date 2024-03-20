@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 /// @title Vault contract for wrapping NFTs (ERC721/ERC1155) to ERC20
-interface INftVault {
+interface INftVaultPermissioned {
     enum NftType {
         ERC721,
         ERC1155
@@ -40,21 +40,35 @@ interface INftVault {
     /// @param collection NFT address that is deposited
     /// @param tokenId token id that is deposited
     /// @param amount amount of token that is deposited, for ERC721 always 1
-    event Deposit(address indexed to, address indexed collection, uint256 tokenId, uint256 amount);
+    event Deposit(address to, address collection, uint256 tokenId, uint256 amount);
 
     /// @notice Emitted on withdrawing NFT from vault
     /// @param to address that gets withdrawn NFTs
     /// @param collection NFT address that is withdrawn
     /// @param tokenId token id that is withdrawn
     /// @param amount amount of token that is withdrawn, for ERC721 always 1
-    event Withdraw(address indexed to, address indexed collection, uint256 tokenId, uint256 amount);
+    event Withdraw(address to, address collection, uint256 tokenId, uint256 amount);
+
+    /// @notice Emitted when adding a wallet to deposit/withdraw allow list
+    /// @param wallet address that is allowed to deposit/withdraw
+    event AllowedDepositWithdraw(address wallet);
+
+    /// @notice Emitted when removing a wallet from deposit/withdraw allow list
+    /// @param wallet address that is disallowed to deposit/withdraw
+    event DisallowedDepositWithdraw(address wallet);
+
+    /// @notice Emitted when `contractAddress` is allowed to receive Vault ERC20 token
+    /// @param contractAddress address that is allowed to receive Vault ERC20 token
+    event AllowedContract(address contractAddress);
+
+    /// @notice Emitted when `contractAddress` address that is disallowed to receive Vault ERC20 token
+    /// @param contractAddress address that is disallowed to receive Vault ERC20 token
+    event DisallowedContract(address contractAddress);
 
     /// @dev Contract is already initialized
     error Initialized();
     /// @dev Collection data is empty
     error InvalidCollections();
-    /// @dev Collection already added
-    error DuplicateCollection();
     /// @dev Token id is listed twice in CollectionData.tokenIds array
     error TokenIdAlreadySet();
     /// @dev Token ids in CollectionData.tokenIds array are not sorted
@@ -78,20 +92,40 @@ interface INftVault {
     error UnsupportedNft();
     /// @dev Token is allowed in vault but must not be
     error MustBeDisallowedToken();
+    /// @dev User is not allowed to deposit or withdraw
+    error NotAllowed();
+    /// @dev Owner is required to manage `allowedContracts` when Vault is deployed as soulbound
+    error OwnerRequiredForSoulbound();
+    /// @dev Transfer of Vault ERC20 token to disallowed receiver
+    error SoulboundTransferDisallowed();
 
     /// @notice value of 1 token, including decimals
     function ONE() external view returns (uint256);
 
-    /// @notice amount of token required for last NFT to be redeemed
-    function LAST_NFT_AMOUNT() external view returns (uint256);
+    /// @notice minimum liquidity that is frozen in UniV2 pool
+    function UNIV2_MINIMUM_LIQUIDITY() external view returns (uint256);
 
     /// @notice unique id of the vault generated using its configuration
     function VAULT_HASH() external view returns (bytes32);
+
+    /// @notice if Vault is soulbound, its ERC20 token can only be transfered to `allowedContracts`
+    /// @return true if Vault is soulbound, false otherwise
+    function isSoulbound() external view returns (bool);
 
     /// @notice Initialize Vault with collection config
     /// @dev Called by factory during deployment
     /// @param collections struct array of allowed collections and token IDs
     function init(CollectionData[] memory collections) external;
+
+    /// @notice Returns true if wallet is allowed to deposit/withdraw. Only applicable to permissioned vault.
+    /// @dev Call `isPermissioned()` first to make sure vault is permissioned. Otherwise this function is irrelevant.
+    /// @param wallet address that is checked
+    /// @return true if wallet is allowed, false otherwise. For permissionless vault always returns false.
+    function allowedWallets(address wallet) external view returns (bool);
+
+    /// @notice Is vault permissioned
+    /// @return true if vault has an owner and is permissioned. False otherwise.
+    function isPermissioned() external view returns (bool);
 
     /// @notice Returns hash of vault configuration
     /// @param collections struct array of allowed collections and token IDs
@@ -140,7 +174,6 @@ interface INftVault {
     function getSentTokenBalance(address collection, uint256 tokenId) external view returns (uint256);
 
     /// @notice Deposit NFT to vault
-    /// @dev This low-level function should be called from a contract which performs important safety checks
     /// @param to address that gets minted ERC20 token
     /// @param collection address of deposited NFT
     /// @param tokenId token ID of deposited NFT
@@ -151,7 +184,6 @@ interface INftVault {
         returns (uint256 amountMinted);
 
     /// @notice Deposit NFTs to vault
-    /// @dev This low-level function should be called from a contract which performs important safety checks
     /// @param to address that gets minted ERC20 token
     /// @param collection array of addresses of deposited NFTs
     /// @param tokenId array of token IDs of deposited NFTs
@@ -162,7 +194,6 @@ interface INftVault {
         returns (uint256 amountMinted);
 
     /// @notice Withdraw NFT from vault
-    /// @dev This low-level function should be called from a contract which performs important safety checks
     /// @param to address that gets NFT
     /// @param collection address of NFT to withdraw
     /// @param tokenId token ID of NFT to withdraw
@@ -173,7 +204,6 @@ interface INftVault {
         returns (uint256 amountBurned);
 
     /// @notice Withdraw NFTs from vault
-    /// @dev This low-level function should be called from a contract which performs important safety checks
     /// @param to address that gets NFT
     /// @param collection array of addresses of NFTs to withdraw
     /// @param tokenId array of token IDs of NFTs to withdraw
@@ -191,4 +221,20 @@ interface INftVault {
     /// @param tokenId token ID of NFT to skim
     /// @param amount amount of NFT to skim, for ERC721 it's always 1
     function skim(address to, NftType nftType, address collection, uint256 tokenId, uint256 amount) external;
+
+    /// @notice Allow wallet to deposit/withdraw. Only applicable to permissioned vault.
+    /// @param wallet address that is allowed to deposit/withdraw
+    function allowDepositWithdraw(address wallet) external;
+
+    /// @notice Disallow wallet to deposit/withdraw. Only applicable to permissioned vault.
+    /// @param wallet address that is disallowed to deposit/withdraw
+    function disallowDepositWithdraw(address wallet) external;
+
+    /// @notice Allow Vault ERC20 token to be transfered to `contractAddress`
+    /// @param contractAddress address that is allowed to receive Vault ERC20 token
+    function allowVaultTokenTransfersTo(address contractAddress) external;
+
+    /// @notice Disallow Vault ERC20 token to be transfered to `contractAddress`
+    /// @param contractAddress address that is disallowed to receive Vault ERC20 token
+    function disallowVaultTokenTransfersTo(address contractAddress) external;
 }

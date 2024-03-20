@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 import "forge-std/Test.sol";
 
@@ -16,8 +16,8 @@ contract UniswapV2PairTest is Test {
     UniswapV2PairOriginal pairOriginal;
     UniswapV2Factory factory;
 
-    ERC20Mintable token0 = new ERC20Mintable();
-    ERC20Mintable token1 = new ERC20Mintable();
+    ERC20Mintable token0;
+    ERC20Mintable token1;
 
     address user1 = address(10000001);
     address user2 = address(10000002);
@@ -31,6 +31,12 @@ contract UniswapV2PairTest is Test {
     uint256 protocolFee = 50;
 
     function setUp() public {
+        address tokenA = address(new ERC20Mintable());
+        address tokenB = address(new ERC20Mintable());
+        (tokenA, tokenB) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        token0 = ERC20Mintable(tokenA);
+        token1 = ERC20Mintable(tokenB);
+
         factory = new UniswapV2Factory(0, 30, protocolFeeBeneficiary);
 
         vm.startPrank(address(factory));
@@ -41,13 +47,12 @@ contract UniswapV2PairTest is Test {
         pairOriginal = new UniswapV2PairOriginal();
         pairOriginal.initialize(address(token0), address(token1));
 
-        pairWithFees = new UniswapV2Pair();
-        pairWithFees.initialize(address(token0), address(token1));
+        pairWithFees = UniswapV2Pair(factory.createPair(address(token0), address(token1)));
 
         vm.stopPrank();
 
         factory.setRoyaltiesFee(address(pairWithFees), royaltiesBeneficiary, royaltiesFee);
-        factory.setProtocolFee(address(pairWithFees), protocolFee);
+        factory.setProtocolFee(address(pairWithFees), protocolFee, true);
         factory.setProtocolFeeBeneficiary(protocolFeeBeneficiary);
     }
 
@@ -68,7 +73,10 @@ contract UniswapV2PairTest is Test {
         assertEq(token1.balanceOf(address(_pair)), token1.balanceOf(address(_pairOriginal)));
     }
 
-    function _addLiquidity(address _pair, uint256 _amount0, uint256 _amount1, address _to) public returns (uint256 liquidity) {
+    function _addLiquidity(address _pair, uint256 _amount0, uint256 _amount1, address _to)
+        public
+        returns (uint256 liquidity)
+    {
         token0.mint(_pair, _amount0);
         token1.mint(_pair, _amount1);
 
@@ -103,16 +111,20 @@ contract UniswapV2PairTest is Test {
         _assertPairs(pair, pairOriginal);
     }
 
-    function _swap(address _pair, uint256 _amount0In, uint256 _amount1In, address _to) public returns (uint256 amountOut) {
+    function _swap(address _pair, uint256 _amount0In, uint256 _amount1In, address _to)
+        public
+        returns (uint256 amountOut)
+    {
         (uint112 reserve0, uint112 reserve1,) = UniswapV2Pair(_pair).getReserves();
-        if (_amount0In > 0) {
+        token0.mint(_pair, _amount0In);
+        token1.mint(_pair, _amount1In);
+
+        if (_amount0In > _amount1In) {
             uint256 amount1Out = UniswapV2Library.getAmountOut(_amount0In, reserve0, reserve1, _pair, address(factory));
-            token0.mint(_pair, _amount0In);
             UniswapV2Pair(_pair).swap(0, amount1Out, _to, bytes(""));
             amountOut = amount1Out;
         } else {
             uint256 amount0Out = UniswapV2Library.getAmountOut(_amount1In, reserve1, reserve0, _pair, address(factory));
-            token1.mint(_pair, _amount1In);
             UniswapV2Pair(_pair).swap(amount0Out, 0, _to, bytes(""));
             amountOut = amount0Out;
         }
@@ -215,11 +227,12 @@ contract UniswapV2PairTest is Test {
         _assertPairs(pair, pairOriginal);
     }
 
-    function testSwapWithFees(uint96 _reserve0, uint96 _reserve1, uint72 _amount0In, uint72 _amount1In) public {
+    function testSwapWithFees(uint96 _reserve0, uint96 _reserve1, uint72 _amount0In, uint72 _amount1In, uint256 _hijackAmount) public {
         vm.assume(_reserve0 > 10000e18);
         vm.assume(_reserve1 > 10000e18);
         vm.assume(_amount0In > 0.001e18);
         vm.assume(_amount1In > 0.001e18);
+        vm.assume(_amount0In > _hijackAmount);
 
         _addLiquidity(address(pairWithFees), _reserve0, _reserve1, user3);
         _addLiquidity(address(pairOriginal), _reserve0, _reserve1, user3);
@@ -229,13 +242,8 @@ contract UniswapV2PairTest is Test {
         assertEq(token0.balanceOf(user1), 0);
         assertEq(token1.balanceOf(user1), 0);
 
-        (
-            ,
-            address beneficiary,
-            uint256 royalties,
-            address protocolBeneficiary,
-            uint256 protocolBeneficiaryFee
-        ) = factory.getFeesAndRecipients(address(pairWithFees));
+        (, address beneficiary, uint256 royalties, address protocolBeneficiary, uint256 protocolBeneficiaryFee) =
+            factory.getFeesAndRecipients(address(pairWithFees));
 
         assertEq(beneficiary, royaltiesBeneficiary);
         assertEq(royalties, royaltiesFee);
@@ -247,11 +255,13 @@ contract UniswapV2PairTest is Test {
         assertEq(token0.balanceOf(protocolBeneficiary), 0);
         uint256 protocolFeeAmount = _amount0In * protocolBeneficiaryFee / 10000;
 
-        uint256 amount1Out = _swap(address(pairWithFees), _amount0In, 0, user1);
+        uint256 amount1Out = _swap(address(pairWithFees), _amount0In, _hijackAmount, user1);
         assertEq(token0.balanceOf(user1), 0);
         assertEq(token1.balanceOf(user1), amount1Out);
         assertEq(token0.balanceOf(beneficiary), royaltiesAmount);
         assertEq(token0.balanceOf(protocolBeneficiary), protocolFeeAmount);
+        assertEq(token1.balanceOf(beneficiary), _hijackAmount * royalties / 10000);
+        assertEq(token1.balanceOf(protocolBeneficiary), _hijackAmount * protocolBeneficiaryFee / 10000);
 
         assertEq(token0.balanceOf(user2), 0);
         assertEq(token1.balanceOf(user2), 0);

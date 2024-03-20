@@ -12,17 +12,22 @@ import "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165Checker.s
 import "lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import "lib/openzeppelin-contracts/contracts/utils/Address.sol";
 
-import "./INftVault.sol";
-import "./INftVaultFactory.sol";
+import "./INftVaultPermissioned.sol";
+import "./INftVaultFactoryPermissioned.sol";
 
-contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
+contract NftVaultPermissioned is INftVaultPermissioned, ERC20, ERC721Holder, ERC1155Holder, Ownable2Step {
+    using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     /// @notice value of 1 token, including decimals
     uint256 public immutable ONE;
 
-    /// @notice amount of token required for last NFT to be redeemed
-    uint256 public immutable LAST_NFT_AMOUNT;
+    /// @notice minimum liquidity that is frozen in UniV2 pool
+    uint256 public constant UNIV2_MINIMUM_LIQUIDITY = 1e3;
+
+    /// @notice if Vault is soulbound, its ERC20 token can only be transfered to
+    ///         EOA, vault itself and `allowedContracts`
+    bool public immutable isSoulbound;
 
     /// @notice unique ID of the vault generated using its configuration
     bytes32 public VAULT_HASH;
@@ -36,15 +41,36 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
     /// @notice maps collection address to tokenId to amount wrapped
     mapping(address => mapping(uint256 => uint256)) public balances;
 
-    /// @param _name name of ERC20 Vault token
-    /// @param _symbol symbol of ERC20 Vault token
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {
-        ONE = 10 ** decimals();
-        /// @dev last NFT can be redeemed for 99.9%
-        LAST_NFT_AMOUNT = ONE * 999 / 1000;
+    /// @notice deposit/withdraw allow list. Maps wallet address to bool, if true, wallet is allowed to deposit/withdraw
+    mapping(address => bool) public allowedWallets;
+
+    /// @notice Vault ERC20 receive allow list. Maps contract address to bool, if true, contract is allowed to receive
+    ///         Vault ERC20 token.
+    mapping(address => bool) public allowedContracts;
+
+    modifier onlyAllowed() {
+        if (isPermissioned() && !allowedWallets[msg.sender]) {
+            revert NotAllowed();
+        }
+
+        _;
     }
 
-    /// @inheritdoc INftVault
+    /// @dev if _owner == address(0), NftVault is deployed as permissionless
+    /// @param _name name of ERC20 Vault token
+    /// @param _symbol symbol of ERC20 Vault token
+    /// @param _owner should be address(0) for permissionless vaults. Otherwise, address of the owner.
+    /// @param _isSoulbound if true, Vault is soulbound, false otherwise
+    constructor(string memory _name, string memory _symbol, address _owner, bool _isSoulbound) ERC20(_name, _symbol) {
+        ONE = 10 ** decimals();
+
+        isSoulbound = _isSoulbound;
+        _transferOwnership(_owner);
+
+        if (_isSoulbound && _owner == address(0)) revert OwnerRequiredForSoulbound();
+    }
+
+    /// @inheritdoc INftVaultPermissioned
     function init(CollectionData[] memory _collections) external {
         if (_collections.length == 0) revert InvalidCollections();
         if (allowedCollections.length() > 0) revert Initialized();
@@ -59,7 +85,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
 
             uint256 nftType = validateNftType(collection.addr, collection.nftType);
 
-            if (!allowedCollections.set(collection.addr, nftType)) revert DuplicateCollection();
+            allowedCollections.set(collection.addr, nftType);
             allowedTokenIds[collection.addr].allowAllIds = collection.allowAllIds;
 
             if (collection.allowAllIds) continue;
@@ -89,12 +115,17 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
-    /// @inheritdoc INftVault
-    function hashVault(INftVault.CollectionData[] memory _collections) public pure returns (bytes32) {
+    /// @inheritdoc INftVaultPermissioned
+    function isPermissioned() public view returns (bool) {
+        return owner() != address(0);
+    }
+
+    /// @inheritdoc INftVaultPermissioned
+    function hashVault(INftVaultPermissioned.CollectionData[] memory _collections) public pure returns (bytes32) {
         return keccak256(abi.encode(_collections));
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function getAllowedCollections() external view returns (address[] memory collections) {
         collections = new address[](allowedCollections.length());
 
@@ -104,12 +135,12 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function getAllowedCollectionsLength() external view returns (uint256) {
         return allowedCollections.length();
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function getAllowedCollectionData(address _collectionAddr) external view returns (CollectionData memory) {
         return CollectionData({
             addr: _collectionAddr,
@@ -119,7 +150,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         });
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function validateNftType(address _collectionAddr, NftType _nftType) public view returns (uint256 nftType) {
         bool supportsERC721 = ERC165Checker.supportsInterface(_collectionAddr, type(IERC721).interfaceId);
         bool supportsERC1155 = ERC165Checker.supportsInterface(_collectionAddr, type(IERC1155).interfaceId);
@@ -132,7 +163,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         nftType = uint256(_nftType);
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function isTokenAllowed(address _collection, uint256 _tokenId) public view returns (bool) {
         (bool isCollectionAllowed,) = allowedCollections.tryGet(_collection);
 
@@ -140,7 +171,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
             && (allowedTokenIds[_collection].allowAllIds || allowedTokenIds[_collection].tokenIds[_tokenId]);
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function getSentTokenBalance(address _collection, uint256 _tokenId) public view returns (uint256) {
         uint256 currentBalance = balances[_collection][_tokenId];
         NftType nftType = NftType(allowedCollections.get(_collection));
@@ -158,35 +189,25 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function deposit(address _to, address _collection, uint256 _tokenId, uint256 _amount)
         public
+        onlyAllowed
         returns (uint256 amountMinted)
     {
         if (!isTokenAllowed(_collection, _tokenId)) revert DisallowedToken();
 
         uint256 sentTokenBalance = getSentTokenBalance(_collection, _tokenId);
-        if (_amount == 0 || sentTokenBalance != _amount) revert WrongAmount();
+        if (_amount == 0 || sentTokenBalance < _amount) revert WrongAmount();
 
         balances[_collection][_tokenId] += _amount;
         emit Deposit(_to, _collection, _tokenId, _amount);
 
         amountMinted = ONE * _amount;
-        uint256 totalSupply_ = totalSupply();
-
-        /// @dev If vault ERC20 supply is "0 < totalSupply <= 0.01" it means that vault has been emptied and there
-        ///      is leftover ERC20 token (most likely) locked in the univ2 pair. To prevent minting small amounts
-        ///      of unbacked ERC20 tokens in a loop, which can lead to unexpected behaviour, vault mints
-        ///      `ONE - totalSupply` amount of ERC20 token for the first NFT that is deposited after the vault was
-        ///      emptied. This allows for the vault and univ2 pair to be reused safely.
-        if (totalSupply_ > 0 && totalSupply_ <= ONE - LAST_NFT_AMOUNT) {
-            amountMinted -= totalSupply_;
-        }
-
         _mint(_to, amountMinted);
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function depositBatch(
         address _to,
         address[] memory _collection,
@@ -198,9 +219,10 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function withdraw(address _to, address _collection, uint256 _tokenId, uint256 _amount)
         public
+        onlyAllowed
         returns (uint256 amountBurned)
     {
         if (_amount == 0 || balances[_collection][_tokenId] < _amount) revert WrongAmount();
@@ -208,9 +230,9 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         balances[_collection][_tokenId] -= _amount;
         amountBurned = ONE * _amount;
 
-        // when withdrawing the last NFT from the vault, allow redeemeing for LAST_NFT_AMOUNT instead of ONE
-        if (totalSupply() == amountBurned && balanceOf(address(this)) >= amountBurned - ONE + LAST_NFT_AMOUNT) {
-            amountBurned = balanceOf(address(this));
+        // when withdrawing the last NFT from the vault, allow being UNIV2_MINIMUM_LIQUIDITY shy
+        if (totalSupply() == amountBurned && balanceOf(address(this)) == amountBurned - UNIV2_MINIMUM_LIQUIDITY) {
+            amountBurned -= UNIV2_MINIMUM_LIQUIDITY;
         }
 
         _burn(address(this), amountBurned);
@@ -229,7 +251,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         emit Withdraw(_to, _collection, _tokenId, _amount);
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function withdrawBatch(
         address _to,
         address[] memory _collection,
@@ -241,7 +263,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         }
     }
 
-    /// @inheritdoc INftVault
+    /// @inheritdoc INftVaultPermissioned
     function skim(address _to, NftType nftType, address _collection, uint256 _tokenId, uint256 _amount) external {
         // Cannot skim supported token
         if (isTokenAllowed(_collection, _tokenId)) revert MustBeDisallowedToken();
@@ -253,5 +275,40 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         } else {
             revert UnsupportedNft();
         }
+    }
+
+    function _beforeTokenTransfer(address, /*from*/ address to, uint256 /*amount*/ ) internal view override {
+        /// @dev Soulbound Vault ERC20 token can be transfered to any EOA, this Vault or `allowedContracts`
+        if (isSoulbound && to != address(this) && Address.isContract(to) && !allowedContracts[to]) {
+            revert SoulboundTransferDisallowed();
+        }
+    }
+
+    /// @inheritdoc INftVaultPermissioned
+    function allowDepositWithdraw(address _wallet) external onlyOwner {
+        allowedWallets[_wallet] = true;
+
+        emit AllowedDepositWithdraw(_wallet);
+    }
+
+    /// @inheritdoc INftVaultPermissioned
+    function disallowDepositWithdraw(address _wallet) external onlyOwner {
+        allowedWallets[_wallet] = false;
+
+        emit DisallowedDepositWithdraw(_wallet);
+    }
+
+    /// @inheritdoc INftVaultPermissioned
+    function allowVaultTokenTransfersTo(address _contractAddress) external onlyOwner {
+        allowedContracts[_contractAddress] = true;
+
+        emit AllowedContract(_contractAddress);
+    }
+
+    /// @inheritdoc INftVaultPermissioned
+    function disallowVaultTokenTransfersTo(address _contractAddress) external onlyOwner {
+        allowedContracts[_contractAddress] = false;
+
+        emit DisallowedContract(_contractAddress);
     }
 }
