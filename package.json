@@ -11,7 +11,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@aws-sdk/client-kms": "^3.577.0",
     "@nomicfoundation/hardhat-foundry": "^1.1.2",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "asn1-ts": "^8.0.2",
+    "ethers": "^5.7.0"
   }
 }
