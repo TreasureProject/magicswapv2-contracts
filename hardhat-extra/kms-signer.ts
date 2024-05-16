@@ -64,7 +64,7 @@ const decodeEcdsaSignature = (bytes: Uint8Array): { r: bigint; s: bigint } => {
     return { r, s };
 };
 
-const toHex = (value: string | Buffer): string => (typeof value === 'string' ? `0x${value}` : ethers.utils.hexlify(value));
+const toHex = (value: string | Buffer): string => (typeof value === 'string' ? `0x${value}` : ethers.hexlify(value));
 
 /**
  * KMS SIGNER
@@ -95,7 +95,7 @@ export class KmsSigner extends ProviderWrapperWithChainId {
 
             // Hash the key, keep the last 20 bytes, normalize to checksum form.
             const { publicKey } = decodeEcdsaPublicKey(kmsPublicKey);
-            this.address = ethers.utils.getAddress(`0x${ethers.utils.keccak256(publicKey).slice(-40)}`);
+            this.address = ethers.getAddress(`0x${ethers.keccak256(publicKey).slice(-40)}`);
         }
         return this.address;
     }
@@ -113,7 +113,7 @@ export class KmsSigner extends ProviderWrapperWithChainId {
     async signMessageHash(messageHash: string): Promise<string> {
         // KMS-sign the message digest.
         const { Signature: kmsSignature } = await this.kms.sign({
-            Message: ethers.utils.arrayify(messageHash),
+            Message: ethers.getBytes(messageHash),
             MessageType: 'DIGEST',
             KeyId: this.keyId,
             SigningAlgorithm: 'ECDSA_SHA_256',
@@ -127,15 +127,15 @@ export class KmsSigner extends ProviderWrapperWithChainId {
 
         // Determine v by comparing candidate addresses with the expected address.
         const address = await this.getAddress();
-        const addressFromV27 = ethers.utils.recoverAddress(messageHash, { r, s, v: 27 });
-        const addressFromV28 = ethers.utils.recoverAddress(messageHash, { r, s, v: 28 });
+        const addressFromV27 = ethers.recoverAddress(messageHash, { r, s, v: 27 });
+        const addressFromV28 = ethers.recoverAddress(messageHash, { r, s, v: 28 });
         const v = address === addressFromV27 ? 27 : 28;
         assert(
             v !== 28 || address === addressFromV28,
             `Expected address ${address} but got ${addressFromV27} (v = 27) and ${addressFromV28} (v = 28).`,
         );
 
-        return ethers.utils.joinSignature({ v, r, s });
+        return ethers.Signature.from({ v, r, s }).serialized;
     }
 
     async request(args: RequestArguments): Promise<unknown> {
@@ -156,28 +156,25 @@ export class KmsSigner extends ProviderWrapperWithChainId {
                 throw new HardhatError(ERRORS.NETWORK.INCOMPATIBLE_FEE_PRICE_FIELDS);
             }
 
-            const unsignedTx = {
-                type: hasEip1559Fields ? 2 : undefined,
+            const tx: ethers.Transaction = ethers.Transaction.from({
                 chainId: await this._getChainId(),
                 gasLimit: txRequest.gas,
                 gasPrice: txRequest.gasPrice,
                 maxFeePerGas: txRequest.maxFeePerGas,
                 maxPriorityFeePerGas: txRequest.maxPriorityFeePerGas,
-                nonce: txRequest.nonce ? Number(txRequest.nonce) : (await this.getNonce(sender)),
+                nonce: txRequest.nonce ? Number(txRequest.nonce) : await this.getNonce(sender),
                 value: txRequest.value,
                 to: txRequest.to ? toHex(txRequest.to) : undefined,
                 data: txRequest.data ? toHex(txRequest.data) : undefined,
                 from: null,
-            };
-            const unsignedTxHash = ethers.utils.keccak256(ethers.utils.serializeTransaction(unsignedTx));
+            });
 
             // Sign and pass on to the wrapped provider.
-            const signature = ethers.utils.splitSignature(await this.signMessageHash(unsignedTxHash));
-            const serializedTx = ethers.utils.serializeTransaction(unsignedTx, signature);
+            tx.signature = ethers.Signature.from(await this.signMessageHash(tx.unsignedHash));
 
             return this._wrappedProvider.request({
                 method: 'eth_sendRawTransaction',
-                params: [serializedTx],
+                params: [tx.serialized],
             });
         }
 
