@@ -1,0 +1,17 @@
+{
+  "name": "magicswapv2-contracts",
+  "version": "1.0.0",
+  "description": "> NFTX meets UniswapV2 meets UniswapV3 TWAP aka **MagicSwapV2**.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.2",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  }
+}
