@@ -18,18 +18,24 @@ const config: HardhatUserConfig = {
     compilers: [
       {
         version: "0.8.18",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1, // Adjust this value as needed
+          },
+        }
       },
       {
         version: "0.8.11",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1, // Adjust this value as needed
+          },
+        }
       },
       // Add other versions if needed
-    ],
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200, // Adjust this value as needed
-      },
-    }
+    ]
   },
   paths: {
       sources: path.resolve(__dirname, "src"),
@@ -42,7 +48,34 @@ const config: HardhatUserConfig = {
       kmsKeyId: devKmsKey,
       chainId: 421614
     }
-  }
+  },
+  sourcify: {
+    enabled: false
+  },
+  etherscan: {
+    apiKey: {
+      arbitrumMainnet: process.env.ARBISCAN_API_KEY,
+      arbitrumSepolia: process.env.ARBISCAN_API_KEY,
+    },
+    customChains: [
+      {
+        network: "arbitrumSepolia",
+        chainId: 421614,
+        urls: {
+          apiURL: "https://api-sepolia.arbiscan.io/api",
+          browserURL: "https://sepolia.arbiscan.io/"
+        }
+      },
+      {
+        network: "arbitrumMainnet",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.arbiscan.io/api",
+          browserURL: "https://arbiscan.io/"
+        }
+      }
+    ]
+  },
 }
 
 export default config;
