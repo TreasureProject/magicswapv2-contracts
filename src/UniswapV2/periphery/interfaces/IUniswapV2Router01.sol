@@ -2,6 +2,15 @@
 pragma solidity 0.8.18;
 
 interface IUniswapV2Router01 {
+
+    error UniswapV2RouterExpired();
+    error UniswapV2RouterOnlyAcceptETHViaFallbackFromWETHContract();
+    error UniswapV2RouterInsufficientBAmount();
+    error UniswapV2RouterInsufficientAAmount();
+    error UniswapV2RouterInsufficientOutputAmount();
+    error UniswapV2RouterExcessiveInputAmount();
+    error UniswapV2RouterInvalidPath();
+
     function factory() external view returns (address);
     function WETH() external view returns (address);
 

@@ -7,7 +7,11 @@ import "../Vault/INftVault.sol";
 /// @title Router contract for swapping, managing liquidity and interacting with vaults
 interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @dev Amounts does not match
-    error WrongAmounts();
+    error MagicSwapV2WrongAmounts();
+    error MagicSwapV2WrongAmountDeposited();
+    error MagicSwapV2WrongAmountADeposited();
+    error MagicSwapV2WrongAmountBDeposited();
+    error MagicSwapV2InvalidPath();
 
     /// @notice Struct that specifies data for liquidity-related operations on vault.
     /// @param token address of NFT vault
@@ -314,14 +318,4 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
         uint256 _deadline
     ) external returns (uint256[] memory amounts);
 
-    /// @notice Swaps ERC20 for ERC20
-    /// @dev Utility function for _swapExactTokensForTokens
-    /// @param _tokenA address of token to swap from
-    /// @param _tokenB address of token to swap to
-    /// @param _amountIn input amount of `_tokenA`
-    /// @return amountOut output amount of swapped `_tokenB`
-    function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn) external returns (uint256 amountOut);
-
-    /// @notice Transition number of NFTs into amount of ERC20
-    function nftAmountToERC20(uint256[] memory _amount) external pure returns (uint256 amount);
 }

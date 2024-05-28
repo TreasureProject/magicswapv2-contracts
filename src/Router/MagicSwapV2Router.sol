@@ -84,7 +84,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         vaultToken.transferFrom(_from, address(_vault), amountToBurn);
         amountBurned = _vault.withdrawBatch(_to, _collection, _tokenId, _amount);
 
-        if (amountToBurn != amountBurned) revert WrongAmounts();
+        if (amountToBurn != amountBurned) revert MagicSwapV2WrongAmounts();
     }
 
     /// @inheritdoc IMagicSwapV2Router
@@ -101,7 +101,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         (amountA, amountB) =
             _addLiquidity(address(_vault.token), _tokenB, amountAMinted, _amountBDesired, amountAMinted, _amountBMin);
 
-        require(amountAMinted == amountA, "Wrong amount deposited");
+        if(amountAMinted != amountA) revert MagicSwapV2WrongAmountDeposited();
 
         address pair = UniswapV2Library.pairFor(factory, address(_vault.token), _tokenB);
         TransferHelper.safeTransfer(address(_vault.token), pair, amountA);
@@ -143,8 +143,8 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         (amountA, amountB) =
             _addLiquidity(address(_vaultA.token), address(_vaultB.token), amountAMinted, amountBMinted, amountAMinted, amountBMinted);
 
-        require(amountAMinted == amountA, "Wrong amount A deposited");
-        require(amountBMinted == amountB, "Wrong amount B deposited");
+        if(amountAMinted != amountA) revert MagicSwapV2WrongAmountADeposited();
+        if(amountBMinted != amountB) revert MagicSwapV2WrongAmountBDeposited();
 
         address pair = UniswapV2Library.pairFor(factory, address(_vaultA.token), address(_vaultB.token));
         TransferHelper.safeTransfer(address(_vaultA.token), pair, amountA);
@@ -284,7 +284,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _to,
         uint256 _deadline
     ) external payable returns (uint256[] memory amounts) {
-        require(_path[_path.length - 1] == WETH, "MagicswapV2Router: INVALID_PATH");
+        if(_path[_path.length - 1] != WETH) revert MagicSwapV2InvalidPath();
 
         uint256 amountIn = _depositVault(_collection, _tokenId, _amount, INftVault(_path[0]), address(this));
 
@@ -365,8 +365,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         }
     }
 
-    /// @inheritdoc IMagicSwapV2Router
-    function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn) public returns (uint256 amountOut) {
+    function swapLeftover(address _tokenA, address _tokenB, uint256 _amountIn) internal returns (uint256 amountOut) {
         if (_amountIn == 0) return 0;
 
         address[] memory path = new address[](2);
@@ -383,8 +382,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         return amounts[1];
     }
 
-    /// @inheritdoc IMagicSwapV2Router
-    function nftAmountToERC20(uint256[] memory _list) public pure returns (uint256 amount) {
+    function nftAmountToERC20(uint256[] memory _list) internal pure returns (uint256 amount) {
         for (uint256 i = 0; i < _list.length; i++) {
             amount += _list[i];
         }

@@ -150,6 +150,14 @@ contract MagicSwapV2RouterTest is Test {
         assertEq(IERC20(_vault).balanceOf(_owner), totalAmount * ONE + _prevBalance);
     }
 
+    function nftAmountToERC20(uint256[] memory _list) internal view returns (uint256 amount) {
+        for (uint256 i = 0; i < _list.length; i++) {
+            amount += _list[i];
+        }
+
+        amount *= ONE;
+    }
+
     function testDepositWithdrawVault(uint256 _tokenId, uint256 _amount) public {
         vm.assume(_tokenId < type(uint256).max - 50);
         vm.assume(_amount > 0);
@@ -165,7 +173,7 @@ contract MagicSwapV2RouterTest is Test {
         vm.prank(user1);
         uint256 amountMinted1 = magicSwapV2Router.depositVault(_collection1, _tokenId1, _amount1, vault1, user1);
 
-        assertEq(amountMinted1, magicSwapV2Router.nftAmountToERC20(_amount1));
+        assertEq(amountMinted1, nftAmountToERC20(_amount1));
 
         _checkNftBalances(_collection1, _tokenId1, _amount1, address(vault1));
         _checkERC20Balances(_collection1, _tokenId1, _amount1, address(vault1), user1, 0);
@@ -180,14 +188,14 @@ contract MagicSwapV2RouterTest is Test {
         vm.prank(user2);
         uint256 amountMinted2 = magicSwapV2Router.depositVault(_collection2, _tokenId2, _amount2, vault2, user2);
 
-        assertEq(amountMinted2, magicSwapV2Router.nftAmountToERC20(_amount2));
+        assertEq(amountMinted2, nftAmountToERC20(_amount2));
 
         _checkNftBalances(_collection2, _tokenId2, _amount2, address(vault2));
         _checkERC20Balances(_collection2, _tokenId2, _amount2, address(vault2), user2, 0);
 
         // withdraw 1
         vm.startPrank(user1);
-        IERC20(address(vault1)).approve(address(magicSwapV2Router), magicSwapV2Router.nftAmountToERC20(_amount1));
+        IERC20(address(vault1)).approve(address(magicSwapV2Router), nftAmountToERC20(_amount1));
 
         uint256 amountBurned1 = magicSwapV2Router.withdrawVault(_collection1, _tokenId1, _amount1, vault1, user3);
         vm.stopPrank();
@@ -205,9 +213,9 @@ contract MagicSwapV2RouterTest is Test {
         (address[] memory _collection3,,) = _mintTokens(user2);
 
         vm.startPrank(user2);
-        IERC20(address(vault2)).approve(address(magicSwapV2Router), magicSwapV2Router.nftAmountToERC20(_amount2));
+        IERC20(address(vault2)).approve(address(magicSwapV2Router), nftAmountToERC20(_amount2));
 
-        vm.expectRevert(IMagicSwapV2Router.WrongAmounts.selector);
+        vm.expectRevert(IMagicSwapV2Router.MagicSwapV2WrongAmounts.selector);
         magicSwapV2Router.withdrawVault(_collection3, _tokenId2, _amount2, vault2, user4);
 
         uint256 leftover = vault2.ONE() - vault2.LAST_NFT_AMOUNT();
@@ -266,7 +274,7 @@ contract MagicSwapV2RouterTest is Test {
             block.timestamp
         );
 
-        assertEq(amountA1, magicSwapV2Router.nftAmountToERC20(_amount1));
+        assertEq(amountA1, nftAmountToERC20(_amount1));
         assertEq(amountB1, amountBDesired1);
 
         address pair = UniswapV2Library.pairFor(address(factory), address(vault2), address(weth));
@@ -291,7 +299,7 @@ contract MagicSwapV2RouterTest is Test {
         _dealWeth(user2, amountBDesired2);
 
         vm.prank(user2);
-        vm.expectRevert("UniswapV2Router: INSUFFICIENT_B_AMOUNT");
+        vm.expectRevert(IUniswapV2Router01.UniswapV2RouterInsufficientBAmount.selector);
         magicSwapV2Router.addLiquidityNFT(
             IMagicSwapV2Router.NftVaultLiquidityData({
                 token: vault2,
@@ -325,7 +333,7 @@ contract MagicSwapV2RouterTest is Test {
             block.timestamp
         );
 
-        assertEq(amountA2, magicSwapV2Router.nftAmountToERC20(_amount2));
+        assertEq(amountA2, nftAmountToERC20(_amount2));
         assertEq(amountB2, amountBMin2);
 
         assertEq(weth.balanceOf(pair), amountB1 + amountBMin2);
@@ -369,7 +377,7 @@ contract MagicSwapV2RouterTest is Test {
             block.timestamp
         );
 
-        assertEq(amountA1, magicSwapV2Router.nftAmountToERC20(_amount1));
+        assertEq(amountA1, nftAmountToERC20(_amount1));
         assertEq(amountB1, amountBDesired1);
 
         address pair = UniswapV2Library.pairFor(address(factory), address(vault2), address(weth));
@@ -394,7 +402,7 @@ contract MagicSwapV2RouterTest is Test {
         vm.deal(user2, amountBDesired2);
 
         vm.prank(user2);
-        vm.expectRevert("UniswapV2Router: INSUFFICIENT_B_AMOUNT");
+        vm.expectRevert(IUniswapV2Router01.UniswapV2RouterInsufficientBAmount.selector);
         magicSwapV2Router.addLiquidityNFTETH{value: amountBDesired2}(
             IMagicSwapV2Router.NftVaultLiquidityData({
                 token: vault2,
@@ -426,7 +434,7 @@ contract MagicSwapV2RouterTest is Test {
             block.timestamp
         );
 
-        assertEq(amountA2, magicSwapV2Router.nftAmountToERC20(_amount2));
+        assertEq(amountA2, nftAmountToERC20(_amount2));
         assertEq(amountB2, amountBMin2);
 
         assertEq(weth.balanceOf(pair), amountB1 + amountBMin2);
@@ -484,8 +492,8 @@ contract MagicSwapV2RouterTest is Test {
 
             amountB1 = __amountB1;
 
-            assertEq(amountA1, magicSwapV2Router.nftAmountToERC20(_amountA1));
-            assertEq(amountB1, magicSwapV2Router.nftAmountToERC20(_amountB1));
+            assertEq(amountA1, nftAmountToERC20(_amountA1));
+            assertEq(amountB1, nftAmountToERC20(_amountB1));
 
             pair = UniswapV2Library.pairFor(address(factory), address(vault1), address(vault2));
             assertEq(IERC20(address(vault2)).balanceOf(pair), amountB1);
@@ -527,8 +535,8 @@ contract MagicSwapV2RouterTest is Test {
             block.timestamp
         );
 
-        assertEq(amountA2, magicSwapV2Router.nftAmountToERC20(_amountA2));
-        assertEq(amountB2, magicSwapV2Router.nftAmountToERC20(_amountB2));
+        assertEq(amountA2, nftAmountToERC20(_amountA2));
+        assertEq(amountB2, nftAmountToERC20(_amountB2));
 
         assertEq(IERC20(address(vault2)).balanceOf(pair), amountB1 + amountB2);
 
@@ -606,7 +614,7 @@ contract MagicSwapV2RouterTest is Test {
         IERC20(pair).approve(address(magicSwapV2Router), lpAmount1);
 
         vm.prank(user1);
-        vm.expectRevert("UniswapV2Router: INSUFFICIENT_A_AMOUNT");
+        vm.expectRevert(IUniswapV2Router01.UniswapV2RouterInsufficientAAmount.selector);
         magicSwapV2Router.removeLiquidityNFT(
             IMagicSwapV2Router.NftVaultLiquidityData({
                 token: vault2,
@@ -624,7 +632,7 @@ contract MagicSwapV2RouterTest is Test {
         );
 
         vm.prank(user1);
-        vm.expectRevert("UniswapV2Router: INSUFFICIENT_B_AMOUNT");
+        vm.expectRevert(IUniswapV2Router01.UniswapV2RouterInsufficientBAmount.selector);
         magicSwapV2Router.removeLiquidityNFT(
             IMagicSwapV2Router.NftVaultLiquidityData({
                 token: vault2,
@@ -762,7 +770,7 @@ contract MagicSwapV2RouterTest is Test {
         IERC20(pair).approve(address(magicSwapV2Router), lpAmount1);
 
         vm.prank(user1);
-        vm.expectRevert("UniswapV2Router: INSUFFICIENT_A_AMOUNT");
+        vm.expectRevert(IUniswapV2Router01.UniswapV2RouterInsufficientAAmount.selector);
         magicSwapV2Router.removeLiquidityNFTETH(
             IMagicSwapV2Router.NftVaultLiquidityData({
                 token: vault2,
@@ -779,7 +787,7 @@ contract MagicSwapV2RouterTest is Test {
         );
 
         vm.prank(user1);
-        vm.expectRevert("UniswapV2Router: INSUFFICIENT_B_AMOUNT");
+        vm.expectRevert(IUniswapV2Router01.UniswapV2RouterInsufficientBAmount.selector);
         magicSwapV2Router.removeLiquidityNFTETH(
             IMagicSwapV2Router.NftVaultLiquidityData({
                 token: vault2,
@@ -950,7 +958,7 @@ contract MagicSwapV2RouterTest is Test {
         (uint256 reserveVault, uint256 reserveWeth) =
             UniswapV2Library.getReserves(address(factory), address(vault2), address(weth));
         address pair = UniswapV2Library.pairFor(address(factory), address(vault2), address(weth));
-        uint256 amountIn = magicSwapV2Router.nftAmountToERC20(_amount1);
+        uint256 amountIn = nftAmountToERC20(_amount1);
         uint256 amountOut = UniswapV2Library.getAmountOut(amountIn, reserveVault, reserveWeth, pair, address(factory));
         uint256 amountOutMin = amountOut;
 
@@ -995,14 +1003,14 @@ contract MagicSwapV2RouterTest is Test {
         (uint256 reserveVault, uint256 reserveWeth) =
             UniswapV2Library.getReserves(address(factory), address(vault2), address(weth));
         address pair = UniswapV2Library.pairFor(address(factory), address(vault2), address(weth));
-        uint256 amountIn = magicSwapV2Router.nftAmountToERC20(_amount1);
+        uint256 amountIn = nftAmountToERC20(_amount1);
         uint256 amountOut = UniswapV2Library.getAmountOut(amountIn, reserveVault, reserveWeth, pair, address(factory));
         uint256 amountOutMin = amountOut;
 
         uint256 prevETHBalance = user2.balance;
 
         vm.prank(user2);
-        vm.expectRevert("MagicswapV2Router: INVALID_PATH");
+        vm.expectRevert(IMagicSwapV2Router.MagicSwapV2InvalidPath.selector);
         magicSwapV2Router.swapNftForETH(
             _collection1, _tokenId1, _amount1, amountOutMin, wrongPath, user2, block.timestamp
         );
@@ -1046,7 +1054,7 @@ contract MagicSwapV2RouterTest is Test {
         (uint256 reserveVault, uint256 reserveWeth) =
             UniswapV2Library.getReserves(address(factory), address(vault2), address(weth));
         address pair = UniswapV2Library.pairFor(address(factory), address(vault2), address(weth));
-        uint256 amountOut = magicSwapV2Router.nftAmountToERC20(_amount1);
+        uint256 amountOut = nftAmountToERC20(_amount1);
         uint256 amountIn = UniswapV2Library.getAmountIn(amountOut, reserveWeth, reserveVault, pair, address(factory));
         uint256 amountInMax = amountIn;
 
@@ -1092,7 +1100,7 @@ contract MagicSwapV2RouterTest is Test {
         (uint256 reserveVault, uint256 reserveWeth) =
             UniswapV2Library.getReserves(address(factory), address(vault2), address(weth));
         address pair = UniswapV2Library.pairFor(address(factory), address(vault2), address(weth));
-        uint256 amountOut = magicSwapV2Router.nftAmountToERC20(_amount1);
+        uint256 amountOut = nftAmountToERC20(_amount1);
         uint256 amountIn = UniswapV2Library.getAmountIn(amountOut, reserveWeth, reserveVault, pair, address(factory));
 
         uint256 dust = 1e18;
@@ -1146,7 +1154,7 @@ contract MagicSwapV2RouterTest is Test {
         uint256 amountIn;
         uint256 amountOut;
         {
-            amountIn = magicSwapV2Router.nftAmountToERC20(_amountIn);
+            amountIn = nftAmountToERC20(_amountIn);
             uint256[] memory amounts = UniswapV2Library.getAmountsOut(address(factory), amountIn, path);
             amountOut = amounts[amounts.length - 1];
             console2.log("amountOut", amountOut);
@@ -1154,8 +1162,8 @@ contract MagicSwapV2RouterTest is Test {
 
         _amountOut[0] = amountOut / ONE;
 
-        assertTrue(magicSwapV2Router.nftAmountToERC20(_amountOut) < amountOut);
-        assertEq(magicSwapV2Router.nftAmountToERC20(_amountOut) / ONE, amountOut / ONE);
+        assertTrue(nftAmountToERC20(_amountOut) < amountOut);
+        assertEq(nftAmountToERC20(_amountOut) / ONE, amountOut / ONE);
 
         uint256 prevPairVault2Balance;
         {
