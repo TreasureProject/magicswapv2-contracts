@@ -23,11 +23,24 @@ contract UniswapV2FactoryTest is Test {
     uint256 tooBigFee;
     uint256 MAX_FEE;
 
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
+    event PairCreated(
+        address indexed token0,
+        address indexed token1,
+        address pair,
+        uint256
+    );
     event DefaultFeesSet(IUniswapV2Factory.DefaultFees fees);
     event LpFeesSet(address indexed pair, uint256 lpFee, bool overrideFee);
-    event RoyaltiesFeesSet(address indexed pair, address beneficiary, uint256 royaltiesFee);
-    event ProtocolFeesSet(address indexed pair, uint256 protocolFee, bool overrideFee);
+    event RoyaltiesFeesSet(
+        address indexed pair,
+        address beneficiary,
+        uint256 royaltiesFee
+    );
+    event ProtocolFeesSet(
+        address indexed pair,
+        uint256 protocolFee,
+        bool overrideFee
+    );
     event ProtocolFeeBeneficiarySet(address beneficiary);
 
     function setUp() public {
@@ -63,9 +76,20 @@ contract UniswapV2FactoryTest is Test {
         assertEq(protocolFee, _expectedProtocolFee);
     }
 
-    function _createPair(address _tokenA, address _tokenB) public returns (address pair) {
-        vm.mockCall(_tokenA, abi.encodeCall(ERC20.decimals, ()), abi.encode(18));
-        vm.mockCall(_tokenB, abi.encodeCall(ERC20.decimals, ()), abi.encode(18));
+    function _createPair(
+        address _tokenA,
+        address _tokenB
+    ) public returns (address pair) {
+        vm.mockCall(
+            _tokenA,
+            abi.encodeCall(ERC20.decimals, ()),
+            abi.encode(18)
+        );
+        vm.mockCall(
+            _tokenB,
+            abi.encodeCall(ERC20.decimals, ()),
+            abi.encode(18)
+        );
 
         pair = factory.createPair(_tokenA, _tokenB);
     }
@@ -82,8 +106,8 @@ contract UniswapV2FactoryTest is Test {
 
         _assertFees(pool1, address(0), 0, 0, 0, protocolFeeBeneficiary);
 
-        IUniswapV2Factory.DefaultFees memory fees =
-            IUniswapV2Factory.DefaultFees({protocolFee: _protocolFee, lpFee: _lpFee});
+        IUniswapV2Factory.DefaultFees memory fees = IUniswapV2Factory
+            .DefaultFees({protocolFee: _protocolFee, lpFee: _lpFee});
 
         vm.prank(hacker);
         vm.expectRevert("Ownable: caller is not the owner");
@@ -99,24 +123,52 @@ contract UniswapV2FactoryTest is Test {
         assertEq(protocolFee, _protocolFee);
         assertEq(lpFee, _lpFee);
 
-        _assertFees(pool1, address(0), 0, _protocolFee, _lpFee, protocolFeeBeneficiary);
+        _assertFees(
+            pool1,
+            address(0),
+            0,
+            _protocolFee,
+            _lpFee,
+            protocolFeeBeneficiary
+        );
 
         vm.prank(owner);
         vm.expectRevert("MagicswapV2: protocolFee > MAX_FEE");
-        factory.setDefaultFees(IUniswapV2Factory.DefaultFees({protocolFee: tooBigFee, lpFee: _lpFee}));
+        factory.setDefaultFees(
+            IUniswapV2Factory.DefaultFees({
+                protocolFee: tooBigFee,
+                lpFee: _lpFee
+            })
+        );
 
         vm.prank(owner);
         vm.expectRevert("MagicswapV2: lpFee > MAX_FEE");
-        factory.setDefaultFees(IUniswapV2Factory.DefaultFees({protocolFee: _protocolFee, lpFee: tooBigFee}));
+        factory.setDefaultFees(
+            IUniswapV2Factory.DefaultFees({
+                protocolFee: _protocolFee,
+                lpFee: tooBigFee
+            })
+        );
 
         vm.prank(owner);
         vm.expectRevert("MagicswapV2: protocolFee + lpFee > MAX_FEE");
-        factory.setDefaultFees(IUniswapV2Factory.DefaultFees({protocolFee: tooBigFee / 2 + 1, lpFee: tooBigFee / 2}));
+        factory.setDefaultFees(
+            IUniswapV2Factory.DefaultFees({
+                protocolFee: tooBigFee / 2 + 1,
+                lpFee: tooBigFee / 2
+            })
+        );
     }
 
-    function testSetLpFee(address _pair, uint256 _lpFee, address _tokenA, address _tokenB) public {
+    function testSetLpFee(
+        address _pair,
+        uint256 _lpFee,
+        address _tokenA,
+        address _tokenB
+    ) public {
         vm.assume(_lpFee <= MAX_FEE);
 
+        vm.assume(_pair != pool1);
         vm.assume(_tokenA != address(0));
         vm.assume(_tokenB != address(0));
         vm.assume(_tokenA != _tokenB);
@@ -168,6 +220,7 @@ contract UniswapV2FactoryTest is Test {
     ) public {
         vm.assume(_royaltiesFee <= MAX_FEE);
 
+        vm.assume(_pair != pool1);
         vm.assume(_tokenA != address(0));
         vm.assume(_tokenB != address(0));
         vm.assume(_tokenA != _tokenB);
@@ -209,14 +262,26 @@ contract UniswapV2FactoryTest is Test {
         assertFalse(protocolFeeOverride);
         assertFalse(lpFeeOverride);
 
-        _assertFees(_pair, _royaltiesBeneficiary, _royaltiesFee, 0, 0, protocolFeeBeneficiary);
+        _assertFees(
+            _pair,
+            _royaltiesBeneficiary,
+            _royaltiesFee,
+            0,
+            0,
+            protocolFeeBeneficiary
+        );
 
         vm.prank(owner);
         vm.expectRevert("MagicswapV2: _royaltiesFee > MAX_FEE");
         factory.setRoyaltiesFee(_pair, _royaltiesBeneficiary, tooBigFee);
     }
 
-    function testSetProtocolFee(address _pair, uint256 _protocolFee, address _tokenA, address _tokenB) public {
+    function testSetProtocolFee(
+        address _pair,
+        uint256 _protocolFee,
+        address _tokenA,
+        address _tokenB
+    ) public {
         vm.assume(_protocolFee <= MAX_FEE);
         vm.assume(_pair != pool1);
 
@@ -255,7 +320,14 @@ contract UniswapV2FactoryTest is Test {
         assertTrue(protocolFeeOverride);
         assertFalse(lpFeeOverride);
 
-        _assertFees(_pair, address(0), 0, _protocolFee, 0, protocolFeeBeneficiary);
+        _assertFees(
+            _pair,
+            address(0),
+            0,
+            _protocolFee,
+            0,
+            protocolFeeBeneficiary
+        );
 
         vm.prank(owner);
         vm.expectRevert("MagicswapV2: _protocolFee > MAX_FEE");
@@ -282,7 +354,11 @@ contract UniswapV2FactoryTest is Test {
         factory.setProtocolFeeBeneficiary(address(0));
     }
 
-    function testGetFees(uint256 _lpFee, uint256 _royaltiesFee, uint256 _protocolFee) public {
+    function testGetFees(
+        uint256 _lpFee,
+        uint256 _royaltiesFee,
+        uint256 _protocolFee
+    ) public {
         vm.assume(_lpFee <= MAX_FEE);
         vm.assume(_royaltiesFee <= MAX_FEE);
         vm.assume(_protocolFee <= MAX_FEE);
@@ -293,7 +369,8 @@ contract UniswapV2FactoryTest is Test {
         factory.setProtocolFee(pool1, _protocolFee, true);
         vm.stopPrank();
 
-        (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee) = factory.getFees(pool1);
+        (uint256 lpFee, uint256 royaltiesFee, uint256 protocolFee) = factory
+            .getFees(pool1);
         uint256 totalFee = lpFee + royaltiesFee + protocolFee;
 
         assertEq(lpFee, _lpFee);
@@ -313,7 +390,10 @@ contract UniswapV2FactoryTest is Test {
 
                 if (_lpFee + _royaltiesFee + _protocolFee <= MAX_FEE) {
                     assertEq(protocolFee, _protocolFee);
-                    assertEq(_lpFee + _royaltiesFee + _protocolFee, factory.getTotalFee(pool1));
+                    assertEq(
+                        _lpFee + _royaltiesFee + _protocolFee,
+                        factory.getTotalFee(pool1)
+                    );
                 } else {
                     assertEq(protocolFee, MAX_FEE - _lpFee - _royaltiesFee);
                 }
@@ -335,11 +415,26 @@ contract UniswapV2FactoryTest is Test {
         vm.assume(_tokenB != address(0));
         vm.assume(_tokenA != _tokenB);
 
-        vm.mockCall(_tokenA, abi.encodeCall(ERC20.decimals, ()), abi.encode(18));
-        vm.mockCall(_tokenB, abi.encodeCall(ERC20.decimals, ()), abi.encode(18));
+        vm.mockCall(
+            _tokenA,
+            abi.encodeCall(ERC20.decimals, ()),
+            abi.encode(18)
+        );
+        vm.mockCall(
+            _tokenB,
+            abi.encodeCall(ERC20.decimals, ()),
+            abi.encode(18)
+        );
 
-        (address token0, address token1) = UniswapV2Library.sortTokens(_tokenA, _tokenB);
-        address expectedPair = UniswapV2Library.pairFor(address(factory), _tokenA, _tokenB);
+        (address token0, address token1) = UniswapV2Library.sortTokens(
+            _tokenA,
+            _tokenB
+        );
+        address expectedPair = UniswapV2Library.pairFor(
+            address(factory),
+            _tokenA,
+            _tokenB
+        );
 
         vm.expectEmit(true, true, true, true);
         emit PairCreated(token0, token1, expectedPair, 2);
