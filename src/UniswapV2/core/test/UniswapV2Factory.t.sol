@@ -168,6 +168,7 @@ contract UniswapV2FactoryTest is Test {
     ) public {
         vm.assume(_lpFee <= MAX_FEE);
 
+        vm.assume(_pair != pool1);
         vm.assume(_tokenA != address(0));
         vm.assume(_tokenB != address(0));
         vm.assume(_tokenA != _tokenB);
@@ -219,6 +220,7 @@ contract UniswapV2FactoryTest is Test {
     ) public {
         vm.assume(_royaltiesFee <= MAX_FEE);
 
+        vm.assume(_pair != pool1);
         vm.assume(_tokenA != address(0));
         vm.assume(_tokenB != address(0));
         vm.assume(_tokenA != _tokenB);
