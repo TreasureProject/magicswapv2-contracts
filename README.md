@@ -15,7 +15,7 @@ Magicswap v2 handles any combination of ERC-721s, ERC-1155s, ERC-20s and simplif
 ### NFT-NFT pools
 These pools are technically ERC-20-ERC-20 given that Magicswap pools hold vault tokens. However, the same UX applies in which the user is transacting into the pools in discrete units of an NFT. These pools require an extremely high denominator for the base pair to be feasible. The ideal base pair is an ERC-1155 with a very high token supply, more akin to a memecoin supply than a 10k collection.
 
-The user leaves remainders of each trade in the pool which contribute to fees sent to liquidity providers.
+The user leaves remainders of each trade in the pool as an additional fee to liquidity providers.
 
 ### Ghost Minting
 ERC-721s designed to conform with Magicswap vaults are ghost minted to the user when they buy from an AMM, meaning the user can purchase any number of ERC-721s from the same collection at the same cost of transferring one tokenId of an ERC-1155. (The same is not true for selling in which the user must pay to transfer each ERC-721 into the pool.)
