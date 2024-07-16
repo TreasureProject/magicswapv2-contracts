@@ -367,6 +367,26 @@ contract NftVaultTest is Test {
         nftVault.deposit(user1, collections[1].addr, _tokenId, _amount + 1);
     }
 
+    function testNoDepositGriefing() public {
+        delete collections;
+        collections.push(collectionERC1155all);
+        NftVault nftVault = NftVault(address(nftVaultFactory.createVault(collections)));
+
+        // User deposited 1 token to the vault
+        ERC1155Mintable(collections[0].addr).mint(address(nftVault), 1, 1);
+        nftVault.deposit(user1, collections[0].addr, 1, 1);
+
+        // Malicious user manually transferred 1 token to the vault
+        vm.startPrank(user2);
+        ERC1155Mintable(collections[0].addr).mint(user2, 1, 1);
+        ERC1155Mintable(collections[0].addr).safeTransferFrom(user2, address(nftVault), 1, 1, bytes(""));
+        vm.stopPrank();
+
+        // User deposited 1 more token to the vault
+        ERC1155Mintable(collections[0].addr).mint(address(nftVault), 1, 1);
+        nftVault.deposit(user1, collections[0].addr, 1, 1);
+    }
+
     function testDepositAllConfigs(uint256 _tokenId, uint256 _amount) public {
         for (uint256 configId = 0; configId < 8; configId++) {
             console2.log("configId", configId);
