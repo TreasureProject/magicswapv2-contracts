@@ -166,7 +166,7 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
         if (!isTokenAllowed(_collection, _tokenId)) revert DisallowedToken();
 
         uint256 sentTokenBalance = getSentTokenBalance(_collection, _tokenId);
-        if (_amount == 0 || sentTokenBalance != _amount) revert WrongAmount();
+        if (_amount == 0 || sentTokenBalance < _amount) revert WrongAmount();
 
         balances[_collection][_tokenId] += _amount;
         emit Deposit(_to, _collection, _tokenId, _amount);
