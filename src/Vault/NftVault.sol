@@ -62,6 +62,8 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
             if (!allowedCollections.set(collection.addr, nftType)) revert DuplicateCollection();
             allowedTokenIds[collection.addr].allowAllIds = collection.allowAllIds;
 
+            emit CollectionAllowed(collection);
+
             if (collection.allowAllIds) continue;
             if (collection.tokenIds.length == 0) revert MissingTokenIds();
 
@@ -84,8 +86,6 @@ contract NftVault is INftVault, ERC20, ERC721Holder, ERC1155Holder {
                 allowedTokenIds[collection.addr].tokenIds[tokenId] = true;
                 allowedTokenIds[collection.addr].tokenIdList.push(tokenId);
             }
-
-            emit CollectionAllowed(collection);
         }
     }
 
