@@ -8,19 +8,21 @@ import "../src/Router/MagicSwapV2Router.sol";
 
 contract MagicswapV2Script is Script {
     function run() public {
-        // arbitrum WETH
-        address WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
+        vm.startBroadcast();
 
-        address protocolFeeBeneficiary = address(1);
-        uint256 protocolFee = 0;
-        uint256 lpFee = 30;
+        // Set base fees per TIP-40
+        address protocolFeeBeneficiary = 0x0eB5B03c0303f2F47cD81d7BE4275AF8Ed347576; // L2 Treasury
+        uint256 protocolFee = 30; // 0.3%
+        uint256 lpFee = 30; // 0.3%
 
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(deployerPrivateKey);
-
+        // Deploy UniswapV2Factory
         UniswapV2Factory factory = new UniswapV2Factory(protocolFee, lpFee, protocolFeeBeneficiary);
+
+        // Deploy MagicswapV2Router
+        address WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
         new MagicSwapV2Router(address(factory), WETH);
 
+        // Deploy NftVaultFactory
         new NftVaultFactory();
 
         vm.stopBroadcast();
