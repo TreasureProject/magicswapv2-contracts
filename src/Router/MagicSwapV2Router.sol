@@ -11,6 +11,7 @@ import "../UniswapV2/core/interfaces/IUniswapV2Pair.sol";
 
 contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
     uint256 public constant ONE = 1e18;
+    address public constant BURN_ADDRESS = address(0xdead);
 
     constructor(address _factory, address _WETH) UniswapV2Router02(_factory, _WETH) {}
 
@@ -150,7 +151,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
                 revert MagicSwapV2WrongAmountADeposited();
             }
             
-            TransferHelper.safeTransfer(address(_vaultA.token), address(0xdead), amountAMinted - amountA);
+            TransferHelper.safeTransfer(address(_vaultA.token), BURN_ADDRESS, amountAMinted - amountA);
         }
 
         if (amountBMinted != amountB) {
@@ -158,7 +159,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
                 revert MagicSwapV2WrongAmountBDeposited();
             }
 
-            TransferHelper.safeTransfer(address(_vaultB.token), address(0xdead), amountBMinted - amountB);
+            TransferHelper.safeTransfer(address(_vaultB.token), BURN_ADDRESS, amountBMinted - amountB);
         }
 
         address pair = UniswapV2Library.pairFor(factory, address(_vaultA.token), address(_vaultB.token));
@@ -260,11 +261,11 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         amountB -= amountBurnedB;
 
         if (amountA > 0) {
-            TransferHelper.safeTransfer(address(_vaultA.token), _to, amountA);
+            TransferHelper.safeTransfer(address(_vaultA.token), BURN_ADDRESS, amountA);
         }
 
         if (amountB > 0) {
-            TransferHelper.safeTransfer(address(_vaultB.token), _to, amountB);
+            TransferHelper.safeTransfer(address(_vaultB.token), BURN_ADDRESS, amountB);
         }
 
         address pair = UniswapV2Library.pairFor(factory, address(_vaultA.token), address(_vaultB.token));
