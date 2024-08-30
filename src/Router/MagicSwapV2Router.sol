@@ -134,6 +134,8 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
     function addLiquidityNFTNFT(
         NftVaultLiquidityData calldata _vaultA,
         NftVaultLiquidityData calldata _vaultB,
+        uint256 _amountAMin,
+        uint256 _amountBMin,
         address _to,
         uint256 _deadline
     ) external ensure(_deadline) returns (uint256 amountA, uint256 amountB, uint256 lpAmount) {
@@ -141,10 +143,23 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         uint256 amountBMinted = _depositVault(_vaultB.collection, _vaultB.tokenId, _vaultB.amount, _vaultB.token, address(this));
 
         (amountA, amountB) =
-            _addLiquidity(address(_vaultA.token), address(_vaultB.token), amountAMinted, amountBMinted, amountAMinted, amountBMinted);
+            _addLiquidity(address(_vaultA.token), address(_vaultB.token), amountAMinted, amountBMinted, _amountAMin, _amountBMin);
 
-        if(amountAMinted != amountA) revert MagicSwapV2WrongAmountADeposited();
-        if(amountBMinted != amountB) revert MagicSwapV2WrongAmountBDeposited();
+        if (amountAMinted != amountA) {
+            if (amountAMinted < amountA) {
+                revert MagicSwapV2WrongAmountADeposited();
+            }
+            
+            TransferHelper.safeTransfer(address(_vaultA.token), address(0xdead), amountAMinted - amountA);
+        }
+
+        if (amountBMinted != amountB) {
+            if (amountBMinted < amountB) {
+                revert MagicSwapV2WrongAmountBDeposited();
+            }
+
+            TransferHelper.safeTransfer(address(_vaultB.token), address(0xdead), amountBMinted - amountB);
+        }
 
         address pair = UniswapV2Library.pairFor(factory, address(_vaultA.token), address(_vaultB.token));
         TransferHelper.safeTransfer(address(_vaultA.token), pair, amountA);
