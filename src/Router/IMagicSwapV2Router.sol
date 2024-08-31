@@ -129,6 +129,8 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     ///      `_vaultB.collection`, `_vaultB.tokenId` and `_vaultB.amount` must be of the same length.
     /// @param _vaultA vault data for NFTs to deposit as liquidity for first side
     /// @param _vaultB vault data for NFTs to deposit as liquidity for second side
+    /// @param _amountAMin minimum amount of token A to be deposited
+    /// @param _amountBMin minimum amount of token B to be deposited
     /// @param _to address that gets LP tokens
     /// @param _deadline transaction deadline
     /// @return amountA amount of token A added as liquidity
@@ -137,6 +139,8 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     function addLiquidityNFTNFT(
         NftVaultLiquidityData calldata _vaultA,
         NftVaultLiquidityData calldata _vaultB,
+        uint256 _amountAMin,
+        uint256 _amountBMin,
         address _to,
         uint256 _deadline
     ) external returns (uint256 amountA, uint256 amountB, uint256 lpAmount);
