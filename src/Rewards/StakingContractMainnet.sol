@@ -393,7 +393,7 @@ contract StakingContractMainnet is ReentrancyGuard {
 
         if (!skipRounding && incentive.isRewardRounded) {
             uint8 decimals = ERC20(incentive.rewardToken).decimals();
-            reward = FullMath.mulDiv(reward, 10**decimals, 10**decimals);
+            reward = reward / 10**decimals * 10**decimals;
         }
 
         rewardPerLiquidityLast[msg.sender][incentiveId] = incentive.rewardPerLiquidity;
