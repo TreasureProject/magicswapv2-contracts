@@ -21,6 +21,7 @@ contract StakingContractMainnet is ReentrancyGuard {
         address token;              // 2nd slot
         address rewardToken;        // 3rd slot
         uint32 endTime;             // 3rd slot
+        bool isRewardRounded;       // 3rd slot
         uint256 rewardPerLiquidity; // 4th slot
         uint32 lastRewardTime;      // 5th slot
         uint112 rewardRemaining;    // 5th slot
@@ -72,7 +73,8 @@ contract StakingContractMainnet is ReentrancyGuard {
         address rewardToken,
         uint112 rewardAmount,
         uint32 startTime,
-        uint32 endTime
+        uint32 endTime,
+        bool isRewardRounded
     ) external nonReentrant returns (uint256 incentiveId) {
 
         if (rewardAmount <= 0) revert InvalidInput();
@@ -93,6 +95,7 @@ contract StakingContractMainnet is ReentrancyGuard {
             rewardToken: rewardToken,
             lastRewardTime: startTime,
             endTime: endTime,
+            isRewardRounded: isRewardRounded,
             rewardRemaining: rewardAmount,
             liquidityStaked: 0,
             // Initial value of rewardPerLiquidity can be arbitrarily set to a non-zero value.
@@ -403,6 +406,10 @@ contract StakingContractMainnet is ReentrancyGuard {
 
         reward = FullMath.mulDiv(rewardPerLiquidityDelta, usersLiquidity, type(uint112).max);
 
+        if (incentive.isRewardRounded) {
+            uint8 decimals = ERC20(incentive.rewardToken).decimals();
+            reward = FullMath.mulDiv(reward, 10**decimals, 10**decimals);
+        }
     }
 
     function _saferTransferFrom(address token, uint256 amount) internal {
