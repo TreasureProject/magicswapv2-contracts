@@ -366,13 +366,16 @@ contract StakingContractMainnet is ReentrancyGuard {
         reward = _calculateReward(incentive, incentiveId, usersLiquidity);
 
         uint256 rewardDelta;
+        // Check if the reward should be rounded
         if (!skipRounding && incentive.isRewardRounded) {
             uint8 decimals = ERC20(incentive.rewardToken).decimals();
             uint256 roundedReward = reward / 10 ** decimals * 10 ** decimals;
+            // Delta of rewards to be left claimable for the user in the future
             rewardDelta = reward - roundedReward;
             reward = roundedReward;
         }
 
+        // Calculate the reward per liquidity delta based on actual rewards given
         uint256 rewardPerLiquidityDelta = rewardDelta * type(uint112).max / usersLiquidity;
         rewardPerLiquidityLast[msg.sender][incentiveId] = incentive.rewardPerLiquidity - rewardPerLiquidityDelta;
 
