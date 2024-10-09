@@ -5,11 +5,11 @@ import "./TestSetup.sol";
 
 contract CreateIncentiveTest is TestSetup {
     function testCreateIncentive(uint112 amount, uint32 startTime, uint32 endTime) public {
-        _createIncentive(address(tokenA), address(tokenB), amount, startTime, endTime);
+        _createIncentive(address(tokenA), address(tokenB), amount, startTime, endTime, false);
     }
 
     function testFailCreateIncentiveInvalidRewardToken(uint32 startTime, uint32 endTime) public {
-        _createIncentive(address(tokenA), zeroAddress, 1, startTime, endTime);
+        _createIncentive(address(tokenA), zeroAddress, 1, startTime, endTime, false);
     }
 
     function testUpdateIncentive(
