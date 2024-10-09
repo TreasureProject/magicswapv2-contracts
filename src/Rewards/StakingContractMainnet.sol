@@ -365,15 +365,18 @@ contract StakingContractMainnet is ReentrancyGuard {
     {
         reward = _calculateReward(incentive, incentiveId, usersLiquidity);
 
+        uint256 rewardDelta;
         if (!skipRounding && incentive.isRewardRounded) {
             uint8 decimals = ERC20(incentive.rewardToken).decimals();
-            reward = reward / 10 ** decimals * 10 ** decimals;
+            uint256 roundedReward = reward / 10 ** decimals * 10 ** decimals;
+            rewardDelta = reward - roundedReward;
+            reward = roundedReward;
         }
 
-        rewardPerLiquidityLast[msg.sender][incentiveId] = incentive.rewardPerLiquidity;
+        uint256 rewardPerLiquidityDelta = rewardDelta * type(uint112).max / usersLiquidity;
+        rewardPerLiquidityLast[msg.sender][incentiveId] = incentive.rewardPerLiquidity - rewardPerLiquidityDelta;
 
         ERC20(incentive.rewardToken).safeTransfer(msg.sender, reward);
-
         emit Claim(incentiveId, msg.sender, reward);
     }
 
