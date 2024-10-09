@@ -307,6 +307,24 @@ contract StakingContractMainnet is ReentrancyGuard {
         }
     }
 
+    /// @dev Claims rewards for all incentives in the list, skipping reward rounding.
+    function claimAllRewards(uint256[] calldata incentiveIds)
+        external
+        nonReentrant
+        returns (uint256[] memory rewards)
+    {
+        uint256 n = incentiveIds.length;
+        rewards = new uint256[](n);
+        for (uint256 i = 0; i < n; i = _increment(i)) {
+            if (incentiveIds[i] > incentiveCount || incentiveIds[i] <= 0) revert InvalidInput();
+
+            Incentive storage incentive = incentives[incentiveIds[i]];
+            _accrueRewards(incentive);
+            rewards[i] =
+                _claimReward(incentive, incentiveIds[i], userStakes[msg.sender][incentive.token].liquidity, true);
+        }
+    }
+
     function _accrueRewards(Incentive storage incentive) internal {
         uint256 lastRewardTime = incentive.lastRewardTime;
 
@@ -338,7 +356,19 @@ contract StakingContractMainnet is ReentrancyGuard {
         internal
         returns (uint256 reward)
     {
+        return _claimReward(incentive, incentiveId, usersLiquidity, false);
+    }
+
+    function _claimReward(Incentive storage incentive, uint256 incentiveId, uint112 usersLiquidity, bool skipRounding)
+        internal
+        returns (uint256 reward)
+    {
         reward = _calculateReward(incentive, incentiveId, usersLiquidity);
+
+        if (!skipRounding && incentive.isRewardRounded) {
+            uint8 decimals = ERC20(incentive.rewardToken).decimals();
+            reward = FullMath.mulDiv(reward, 10 ** decimals, 10 ** decimals);
+        }
 
         rewardPerLiquidityLast[msg.sender][incentiveId] = incentive.rewardPerLiquidity;
 
@@ -375,11 +405,6 @@ contract StakingContractMainnet is ReentrancyGuard {
         }
 
         reward = FullMath.mulDiv(rewardPerLiquidityDelta, usersLiquidity, type(uint112).max);
-
-        if (incentive.isRewardRounded) {
-            uint8 decimals = ERC20(incentive.rewardToken).decimals();
-            reward = FullMath.mulDiv(reward, 10 ** decimals, 10 ** decimals);
-        }
     }
 
     function _saferTransferFrom(address token, uint256 amount) internal {
