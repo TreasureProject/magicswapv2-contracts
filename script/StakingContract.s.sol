@@ -6,8 +6,7 @@ import "../src/Rewards/StakingContractMainnet.sol";
 
 contract StakingContractScript is Script {
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
 
         new StakingContractMainnet();
 
