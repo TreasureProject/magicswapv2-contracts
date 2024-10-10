@@ -14,6 +14,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 cache
 out
 
+cache_hardhat-zk
+
 *.zip
 .last_confs
 .zip-output-url.txt
