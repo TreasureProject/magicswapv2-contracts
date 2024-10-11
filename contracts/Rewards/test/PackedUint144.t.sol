@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.11;
+pragma solidity 0.8.20;
 
-import "ds-test/test.sol";
+import { Test } from "forge-std/Test.sol";
 import "../libraries/PackedUint144.sol";
 
-contract PackedUintTest is DSTest {
+contract PackedUintTest is Test {
 
     using PackedUint144 for uint144;
 

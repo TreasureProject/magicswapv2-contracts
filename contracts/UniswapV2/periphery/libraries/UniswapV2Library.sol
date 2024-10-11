@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 
 import "../../core/interfaces/IUniswapV2Pair.sol";
 import "../../core/interfaces/IUniswapV2Factory.sol";
 import "../../core/libraries/SafeMath.sol";
 
+/**
+ * @notice Modified UniswapV2 to work with zksync stack based CREATE2
+ **/
 library UniswapV2Library {
     using SafeMath for uint256;
 
@@ -15,23 +18,22 @@ library UniswapV2Library {
         require(token0 != address(0), "UniswapV2Library: ZERO_ADDRESS");
     }
 
-    /// @dev calculates the CREATE2 address for a pair without making any external calls
+    // calculates the CREATE2 address for a pair without making any external calls
     function pairFor(address factory, address tokenA, address tokenB) internal pure returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
-        pair = address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            hex"ff",
-                            factory,
-                            keccak256(abi.encodePacked(token0, token1)),
-                            hex"5ef2d07853620860a5e77bae863f7dc2bd883e28f5e9c837541f791fb45076c7" // init code hash, keccak256(type(UniswapV2Pair).creationCode)
-                        )
+        pair = address(uint160(
+            uint256(
+                keccak256(
+                    abi.encodePacked(
+                        bytes32(0x2020dba91b30cc0006188af794c2fb30dd8520db7e2c088b7fc7c103c00ca494), // keccak256("zksyncCreate2")
+                        bytes32(uint256(uint160(factory))), // sender
+                        keccak256(abi.encodePacked(token0, token1)), // salt
+                        hex'010004df694643e2d7e17535f16c21e9d1698b06c2ef330166830639b23b7f43', // init code hash
+                        bytes32(0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470) // constructor input hash: keccak256("")
                     )
                 )
             )
-        );
+        ));
     }
 
     /// @dev fetches and sorts the reserves for a pair

@@ -19,7 +19,7 @@ contract MagicswapV2Script is Script {
         UniswapV2Factory factory = new UniswapV2Factory(protocolFee, lpFee, protocolFeeBeneficiary);
 
         // Deploy MagicswapV2Router
-        address WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
+        address WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1; // TBA: wMAGIC
         new MagicSwapV2Router(address(factory), WETH);
 
         // Deploy NftVaultFactory

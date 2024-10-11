@@ -1,22 +1,22 @@
+import "hardhat-deploy";
+import "@treasure-dev/hardhat-kms";
+import "@matterlabs/hardhat-zksync";
+import "@matterlabs/hardhat-zksync-verify";
+import "@nomicfoundation/hardhat-foundry";
 import { HardhatUserConfig } from "hardhat/config";
 
-import "@matterlabs/hardhat-zksync";
-import "@nomicfoundation/hardhat-foundry";
+
+const devKmsKey = process.env.DEV_KMS_RESOURCE_ID;
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "zkSyncSepoliaTestnet",
+  defaultNetwork: "zkSyncSepolia",
   networks: {
-    zkSyncSepoliaTestnet: {
+    zkSyncSepolia: {
       url: "https://sepolia.era.zksync.dev",
       ethNetwork: "sepolia",
       zksync: true,
       verifyURL: "https://explorer.sepolia.era.zksync.dev/contract_verification",
-    },
-    zkSyncMainnet: {
-      url: "https://mainnet.era.zksync.io",
-      ethNetwork: "mainnet",
-      zksync: true,
-      verifyURL: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
+      kmsKeyId: devKmsKey,
     },
     dockerizedNode: {
       url: "http://localhost:3050",
@@ -41,6 +41,9 @@ const config: HardhatUserConfig = {
   },
   solidity: {
     version: "0.8.20",
+  },
+  namedAccounts: {
+    deployer: 0,
   },
 };
 
