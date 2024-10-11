@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 
 /// @title Vault contract for wrapping NFTs (ERC721/ERC1155) to ERC20
 interface INftVault {

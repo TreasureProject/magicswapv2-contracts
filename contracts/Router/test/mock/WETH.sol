@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 
 contract WETH {
     string public name = "Wrapped Ether";
@@ -26,7 +26,8 @@ contract WETH {
     function withdraw(uint256 wad) public {
         require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
-        payable(msg.sender).transfer(wad);
+        (bool success,) = payable(msg.sender).call{value: wad}("");
+        require(success, "Transfer failed");
         emit Withdrawal(msg.sender, wad);
     }
 

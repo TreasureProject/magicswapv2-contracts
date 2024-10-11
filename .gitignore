@@ -15,6 +15,8 @@ cache
 out
 
 cache_hardhat-zk
+artifacts-zk
+cache-zk
 
 *.zip
 .last_confs
