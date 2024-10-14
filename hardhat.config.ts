@@ -12,10 +12,29 @@ const config: HardhatUserConfig = {
   defaultNetwork: "zkSyncSepolia",
   networks: {
     zkSyncSepolia: {
-      url: "https://sepolia.era.zksync.dev",
+      url: process.env.ZKSYNC_SEPOLIA_RPC ?? "",
       ethNetwork: "sepolia",
       zksync: true,
-      verifyURL: "https://explorer.sepolia.era.zksync.dev/contract_verification",
+      verifyURL: process.env.ZKSYNC_SEPOLIA_VERIFY ?? "",
+      kmsKeyId: devKmsKey,
+    },
+    treasureTopaz: {
+      url: process.env.TREASURE_TOPAZ_RPC ?? "",
+      ethNetwork: "sepolia",
+      zksync: true,
+      verifyURL: process.env.TREASURE_TOPAZ_VERIFY ?? "",
+      kmsKeyId: devKmsKey,
+    },
+    arbitrumSepolia: {
+      url: process.env.ARBITRUM_SEPOLIA_RPC ?? "",
+      ethNetwork: "sepolia",
+      zksync: true,
+      kmsKeyId: devKmsKey,
+    },
+    arbitrumOne: {
+      url: process.env.ARBITRUM_RPC ?? "",
+      ethNetwork: "sepolia",
+      zksync: false,
       kmsKeyId: devKmsKey,
     },
     dockerizedNode: {
