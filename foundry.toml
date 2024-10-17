@@ -1,8 +1,11 @@
 [profile.default]
-src = 'src'
+src = 'contracts'
 out = 'out'
-libs = ['lib']
+libs = ['lib', 'node_modules']
+test = 'foundry-test'
+cache_path  = 'cache_forge'
 bytecode_hash = 'none'
+
 
 [etherscan]
 arbitrum = { key = "${ARBISCAN_API_KEY}" }
