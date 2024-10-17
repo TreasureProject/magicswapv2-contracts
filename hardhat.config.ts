@@ -3,7 +3,8 @@ import "@treasure-dev/hardhat-kms";
 import "@matterlabs/hardhat-zksync";
 import "@matterlabs/hardhat-zksync-verify";
 import "@nomicfoundation/hardhat-foundry";
-import { HardhatUserConfig } from "hardhat/config";
+import { HardhatUserConfig, task } from "hardhat/config";
+import { getUniswapV2BytecodeHash } from "./scripts/getUniswapV2BytecodeHash";
 
 
 const devKmsKey = process.env.DEV_KMS_RESOURCE_ID;
@@ -52,7 +53,7 @@ const config: HardhatUserConfig = {
     },
   },
   zksolc: {
-    version: "latest",
+    version: "1.5.4",
     settings: {
       // find all available options in the official documentation
       // https://docs.zksync.io/build/tooling/hardhat/hardhat-zksync-solc#configuration
@@ -65,5 +66,13 @@ const config: HardhatUserConfig = {
     deployer: 0,
   },
 };
+
+task(
+  "uniswap-bytecode-hash",
+  "Prints the bytecode hash of UniswapV2Pair contract",
+  async function (taskArguments, hre, runSuper) {
+    console.log("uniswapV2 bytecode hash", await getUniswapV2BytecodeHash(hre));
+  }
+);
 
 export default config;

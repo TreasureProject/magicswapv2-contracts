@@ -18,8 +18,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("UniswapV2Factory deployed to:", factory.address);
 
-  const wethAddress = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1";
-  const routerConstructorArguments = [factory.address, wethAddress];
+  const wMagic = "0x095ded714d42cBD5fb2E84A0FfbFb140E38dC9E1";
+  const routerConstructorArguments = [factory.address, wMagic];
   const magicSwapV2Router = await deploy('MagicSwapV2Router', {
     from: deployer,
     args: routerConstructorArguments,

@@ -18,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "@matterlabs/hardhat-zksync": "^1.1.0",
+    "@matterlabs/hardhat-zksync-verify": "^1.6.0",
     "@matterlabs/zksync-contracts": "^0.6.1",
     "@nomicfoundation/hardhat-foundry": "^1.1.2",
     "@nomicfoundation/hardhat-verify": "^2.0.9",

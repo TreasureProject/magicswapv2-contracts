@@ -11,6 +11,9 @@ importers:
       '@matterlabs/hardhat-zksync':
         specifier: ^1.1.0
         version: 1.2.0(hev46a52yfe6h3nutol7622bma)
+      '@matterlabs/hardhat-zksync-verify':
+        specifier: ^1.6.0
+        version: 1.6.0(@nomicfoundation/hardhat-verify@2.0.11(hardhat@2.22.13(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.6.3))(typescript@5.6.3)))(hardhat@2.22.13(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.6.3))(typescript@5.6.3))
       '@matterlabs/zksync-contracts':
         specifier: ^0.6.1
         version: 0.6.1(@openzeppelin/contracts-upgradeable@4.6.0)(@openzeppelin/contracts@4.9.6)
