@@ -23,4 +23,35 @@ contract NftVaultManager {
         IERC20(_vault).transferFrom(msg.sender, _vault, totalAmount * vault.ONE());
         return vault.withdrawBatch(msg.sender, _collections, _tokenIds, _amounts);
     }
+
+    function depositBatch(
+        address _vault,
+        address[] memory _collections,
+        uint256[] memory _tokenIds,
+        uint256[] memory _amounts
+    ) external returns (uint256) {
+        INftVault vault = INftVault(_vault);
+        address collectionAddress;
+
+        for (uint256 i = 0; i < _collections.length; i++) {
+            collectionAddress = _collections[i];
+            INftVault.CollectionData memory collectionData = vault.getAllowedCollectionData(
+                collectionAddress
+            );
+            if (collectionData.nftType == INftVault.NftType.ERC1155) {
+                IERC1155(collectionAddress).safeTransferFrom(
+                    msg.sender,
+                    _vault,
+                    _tokenIds[i],
+                    _amounts[i],
+                    ""
+                );
+            } else if (collectionData.nftType == INftVault.NftType.ERC721) {
+                IERC721(collectionAddress).safeTransferFrom(msg.sender, _vault, _tokenIds[i]);
+            } else {
+                revert("NftVaultManager: Invalid NFT type");
+            }
+        }
+        return vault.depositBatch(msg.sender, _collections, _tokenIds, _amounts);
+    }
 }

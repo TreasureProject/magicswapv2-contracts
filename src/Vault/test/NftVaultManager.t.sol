@@ -138,4 +138,59 @@ contract NftVaultManagerTest is Test {
         assertEq(ERC1155Mintable(_collections[1].addr).balanceOf(user2, _tokenId), _amount - 1);
         assertEq(ERC1155Mintable(_collections[1].addr).balanceOf(address(nftVault), _tokenId), 0);
     }
+
+    function testDepositBatch(uint256 _tokenId, uint256 _amount) public {
+        INftVault.CollectionData[] memory _collections = _getConfig();
+        NftVault vault = NftVault(address(nftVaultFactory.createVault(_collections)));
+
+        for (uint256 i = 0; i < _collections.length; i++) {
+            if (!collections[i].allowAllIds) {
+                // if not all allowed, take random tokenId that is allowed with fuzzing for randomness
+                _tokenId = collections[i].tokenIds[_tokenId % collections[i].tokenIds.length];
+            }
+
+            if (collections[i].nftType == INftVault.NftType.ERC721) {
+                _amount = 1;
+                ERC721Mintable(collections[i].addr).mint(user1, _tokenId);
+
+                vm.prank(user1);
+                ERC721Mintable(collections[i].addr).setApprovalForAll(
+                    address(nftVaultManager),
+                    true
+                );
+            } else {
+                ERC1155Mintable(collections[i].addr).mint(user1, _tokenId, _amount);
+                vm.prank(user1);
+                ERC1155Mintable(collections[i].addr).setApprovalForAll(
+                    address(nftVaultManager),
+                    true
+                );
+            }
+
+            uint256 balancesBefore = vault.balances(collections[i].addr, _tokenId);
+            uint256 erc20balanceBefore = vault.balanceOf(user1);
+
+            vm.expectEmit(true, true, true, true);
+            emit Deposit(user1, collections[i].addr, _tokenId, _amount);
+
+            address[] memory tempCollections = new address[](1);
+            uint256[] memory tempTokenIds = new uint256[](1);
+            uint256[] memory tempAmounts = new uint256[](1);
+            tempCollections[0] = collections[i].addr;
+            tempTokenIds[0] = _tokenId;
+            tempAmounts[0] = _amount;
+
+            vm.prank(user1);
+            uint256 amountMinted = nftVaultManager.depositBatch(
+                address(vault),
+                tempCollections,
+                tempTokenIds,
+                tempAmounts
+            );
+
+            assertEq(amountMinted / vault.ONE(), _amount);
+            assertEq(vault.balanceOf(user1), erc20balanceBefore + amountMinted);
+            assertEq(vault.balances(collections[i].addr, _tokenId), balancesBefore + _amount);
+        }
+    }
 }
