@@ -234,6 +234,16 @@ contract StakingContractMainnet is ReentrancyGuard {
         emit Unstake(token, msg.sender, amount);
     }
 
+    function subscribeToIncentives(uint256[] memory incentiveIds) external {
+        uint256 n = incentiveIds.length;
+
+        for (uint256 i = 0; i < n; i = _increment(i)) {
+
+            subscribeToIncentive(incentiveIds[i]);
+
+        }
+    }
+
     function subscribeToIncentive(uint256 incentiveId) public nonReentrant {
         if (incentiveId > incentiveCount || incentiveId <= 0) revert InvalidInput();
 
