@@ -5,6 +5,7 @@ import "lib/solmate/src/tokens/ERC20.sol";
 
 contract Token is ERC20 {
     constructor() ERC20("", "", 18) {}
+
     function mint(uint256 amount) external {
         _mint(msg.sender, amount);
     }

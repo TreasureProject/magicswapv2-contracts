@@ -459,7 +459,7 @@ contract MagicSwapV2RouterTest is Test {
         collectionArray = [address(nft2), address(nft2)];
         tokenIdArray = [_tokenId++, _tokenId++];
         amountArray = [5, 5];
-        
+
         (address[] memory _collectionB1, uint256[] memory _tokenIdB1, uint256[] memory _amountB1) = _mintTokens(user1);
 
         vm.prank(user1);
@@ -517,7 +517,7 @@ contract MagicSwapV2RouterTest is Test {
         collectionArray = [address(nft2)];
         tokenIdArray = [_tokenId++];
         amountArray = [5];
-        
+
         (address[] memory _collectionB2, uint256[] memory _tokenIdB2, uint256[] memory _amountB2) = _mintTokens(user2);
 
         vm.prank(user2);

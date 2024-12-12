@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 
 library PackedUint144 {
-
     uint256 private constant MAX_UINT24 = type(uint24).max;
     uint256 private constant MAX_UINT48 = type(uint48).max;
     uint256 private constant MAX_UINT72 = type(uint72).max;
@@ -41,5 +40,4 @@ library PackedUint144 {
         uint256 right = packedUint144 & rightMask;
         return uint144((left >> 24) | right);
     }
-
 }

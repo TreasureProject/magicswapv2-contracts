@@ -97,12 +97,13 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _to,
         uint256 _deadline
     ) external ensure(_deadline) returns (uint256 amountA, uint256 amountB, uint256 lpAmount) {
-        uint256 amountAMinted = _depositVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this));
+        uint256 amountAMinted =
+            _depositVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this));
 
         (amountA, amountB) =
             _addLiquidity(address(_vault.token), _tokenB, amountAMinted, _amountBDesired, amountAMinted, _amountBMin);
 
-        if(amountAMinted != amountA) revert MagicSwapV2WrongAmountDeposited();
+        if (amountAMinted != amountA) revert MagicSwapV2WrongAmountDeposited();
 
         address pair = UniswapV2Library.pairFor(factory, address(_vault.token), _tokenB);
         TransferHelper.safeTransfer(address(_vault.token), pair, amountA);
@@ -119,12 +120,14 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _to,
         uint256 _deadline
     ) external payable returns (uint256 amountToken, uint256 amountETH, uint256 lpAmount) {
-        uint256 amountMinted = _depositVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this));
+        uint256 amountMinted =
+            _depositVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this));
 
         _approveIfNeeded(address(_vault.token), amountMinted);
 
-        (amountToken, amountETH, lpAmount) =
-            _addLiquidityETH(address(_vault.token), amountMinted, amountMinted, _amountETHMin, address(this), _to, _deadline);
+        (amountToken, amountETH, lpAmount) = _addLiquidityETH(
+            address(_vault.token), amountMinted, amountMinted, _amountETHMin, address(this), _to, _deadline
+        );
 
         address pair = UniswapV2Library.pairFor(factory, address(_vault.token), WETH);
 
@@ -140,17 +143,20 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _to,
         uint256 _deadline
     ) external ensure(_deadline) returns (uint256 amountA, uint256 amountB, uint256 lpAmount) {
-        uint256 amountAMinted = _depositVault(_vaultA.collection, _vaultA.tokenId, _vaultA.amount, _vaultA.token, address(this));
-        uint256 amountBMinted = _depositVault(_vaultB.collection, _vaultB.tokenId, _vaultB.amount, _vaultB.token, address(this));
+        uint256 amountAMinted =
+            _depositVault(_vaultA.collection, _vaultA.tokenId, _vaultA.amount, _vaultA.token, address(this));
+        uint256 amountBMinted =
+            _depositVault(_vaultB.collection, _vaultB.tokenId, _vaultB.amount, _vaultB.token, address(this));
 
-        (amountA, amountB) =
-            _addLiquidity(address(_vaultA.token), address(_vaultB.token), amountAMinted, amountBMinted, _amountAMin, _amountBMin);
+        (amountA, amountB) = _addLiquidity(
+            address(_vaultA.token), address(_vaultB.token), amountAMinted, amountBMinted, _amountAMin, _amountBMin
+        );
 
         if (amountAMinted != amountA) {
             if (amountAMinted < amountA) {
                 revert MagicSwapV2WrongAmountADeposited();
             }
-            
+
             TransferHelper.safeTransfer(address(_vaultA.token), BURN_ADDRESS, amountAMinted - amountA);
         }
 
@@ -181,11 +187,13 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         uint256 _deadline,
         bool _swapLeftover
     ) external returns (uint256 amountA, uint256 amountB) {
-        (amountA, amountB) =
-            removeLiquidity(address(_vault.token), _tokenB, _lpAmount, _amountAMin, _amountBMin, address(this), _deadline);
+        (amountA, amountB) = removeLiquidity(
+            address(_vault.token), _tokenB, _lpAmount, _amountAMin, _amountBMin, address(this), _deadline
+        );
 
         // withdraw NFTs and send to user
-        uint256 amountBurned = _withdrawVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this), _to);
+        uint256 amountBurned =
+            _withdrawVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this), _to);
 
         amountA -= amountBurned;
 
@@ -215,11 +223,13 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         uint256 _deadline,
         bool _swapLeftover
     ) external returns (uint256 amountToken, uint256 amountETH) {
-        (amountToken, amountETH) =
-            removeLiquidity(address(_vault.token), WETH, _lpAmount, _amountTokenMin, _amountETHMin, address(this), _deadline);
+        (amountToken, amountETH) = removeLiquidity(
+            address(_vault.token), WETH, _lpAmount, _amountTokenMin, _amountETHMin, address(this), _deadline
+        );
 
         // withdraw NFTs and send to user
-        uint256 amountBurned = _withdrawVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this), _to);
+        uint256 amountBurned =
+            _withdrawVault(_vault.collection, _vault.tokenId, _vault.amount, _vault.token, address(this), _to);
 
         amountToken -= amountBurned;
 
@@ -250,12 +260,21 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _to,
         uint256 _deadline
     ) external returns (uint256 amountA, uint256 amountB) {
-        (amountA, amountB) =
-            removeLiquidity(address(_vaultA.token), address(_vaultB.token), _lpAmount, _amountAMin, _amountBMin, address(this), _deadline);
+        (amountA, amountB) = removeLiquidity(
+            address(_vaultA.token),
+            address(_vaultB.token),
+            _lpAmount,
+            _amountAMin,
+            _amountBMin,
+            address(this),
+            _deadline
+        );
 
         // withdraw NFTs and send to user
-        uint256 amountBurnedA = _withdrawVault(_vaultA.collection, _vaultA.tokenId, _vaultA.amount, _vaultA.token, address(this), _to);
-        uint256 amountBurnedB = _withdrawVault(_vaultB.collection, _vaultB.tokenId, _vaultB.amount, _vaultB.token, address(this), _to);
+        uint256 amountBurnedA =
+            _withdrawVault(_vaultA.collection, _vaultA.tokenId, _vaultA.amount, _vaultA.token, address(this), _to);
+        uint256 amountBurnedB =
+            _withdrawVault(_vaultB.collection, _vaultB.tokenId, _vaultB.amount, _vaultB.token, address(this), _to);
 
         amountA -= amountBurnedA;
         amountB -= amountBurnedB;
@@ -269,7 +288,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         }
 
         address pair = UniswapV2Library.pairFor(factory, address(_vaultA.token), address(_vaultB.token));
-        
+
         emit NFTNFTLiquidityRemoved(_to, pair, _vaultA, _vaultB);
     }
 
@@ -300,7 +319,7 @@ contract MagicSwapV2Router is IMagicSwapV2Router, UniswapV2Router02 {
         address _to,
         uint256 _deadline
     ) external payable returns (uint256[] memory amounts) {
-        if(_path[_path.length - 1] != WETH) revert MagicSwapV2InvalidPath();
+        if (_path[_path.length - 1] != WETH) revert MagicSwapV2InvalidPath();
 
         uint256 amountIn = _depositVault(_collection, _tokenId, _amount, INftVault(_path[0]), address(this));
 

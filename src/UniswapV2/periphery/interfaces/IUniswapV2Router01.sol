@@ -2,7 +2,6 @@
 pragma solidity 0.8.18;
 
 interface IUniswapV2Router01 {
-
     error UniswapV2RouterExpired();
     error UniswapV2RouterOnlyAcceptETHViaFallbackFromWETHContract();
     error UniswapV2RouterInsufficientBAmount();

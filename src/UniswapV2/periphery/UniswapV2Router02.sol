@@ -18,9 +18,8 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
     address public immutable override factory;
     address public immutable override WETH;
 
-    
     modifier ensure(uint256 deadline) {
-        if(deadline < block.timestamp) revert UniswapV2RouterExpired();
+        if (deadline < block.timestamp) revert UniswapV2RouterExpired();
         _;
     }
 
@@ -30,7 +29,7 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
     }
 
     receive() external payable {
-        if(msg.sender != WETH) revert UniswapV2RouterOnlyAcceptETHViaFallbackFromWETHContract();
+        if (msg.sender != WETH) revert UniswapV2RouterOnlyAcceptETHViaFallbackFromWETHContract();
     }
 
     // **** ADD LIQUIDITY ****
@@ -52,12 +51,12 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         } else {
             uint256 amountBOptimal = UniswapV2Library.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                if(amountBOptimal < amountBMin) revert UniswapV2RouterInsufficientBAmount();
+                if (amountBOptimal < amountBMin) revert UniswapV2RouterInsufficientBAmount();
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
                 uint256 amountAOptimal = UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                if(amountAOptimal < amountAMin) revert UniswapV2RouterInsufficientAAmount();
+                if (amountAOptimal < amountAMin) revert UniswapV2RouterInsufficientAAmount();
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
@@ -127,8 +126,8 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         (uint256 amount0, uint256 amount1) = IUniswapV2Pair(pair).burn(to);
         (address token0,) = UniswapV2Library.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
-        if(amountA < amountAMin) revert UniswapV2RouterInsufficientAAmount();
-        if(amountB < amountBMin) revert UniswapV2RouterInsufficientBAmount();
+        if (amountA < amountAMin) revert UniswapV2RouterInsufficientAAmount();
+        if (amountB < amountBMin) revert UniswapV2RouterInsufficientBAmount();
     }
 
     function removeLiquidityETH(
@@ -218,7 +217,7 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         uint256 deadline
     ) internal ensure(deadline) returns (uint256[] memory amounts) {
         amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path);
-        if(amounts[amounts.length - 1] < amountOutMin) revert UniswapV2RouterInsufficientOutputAmount();
+        if (amounts[amounts.length - 1] < amountOutMin) revert UniswapV2RouterInsufficientOutputAmount();
         TransferHelper.safeTransferFrom(path[0], from, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]);
         _swap(amounts, path, to);
     }
@@ -242,7 +241,7 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         uint256 deadline
     ) internal ensure(deadline) returns (uint256[] memory amounts) {
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        if(amounts[0] > amountInMax) revert UniswapV2RouterExcessiveInputAmount();
+        if (amounts[0] > amountInMax) revert UniswapV2RouterExcessiveInputAmount();
         TransferHelper.safeTransferFrom(path[0], from, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]);
         _swap(amounts, path, to);
     }
@@ -255,9 +254,9 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         ensure(deadline)
         returns (uint256[] memory amounts)
     {
-        if(path[0] != WETH) revert UniswapV2RouterInvalidPath();
+        if (path[0] != WETH) revert UniswapV2RouterInvalidPath();
         amounts = UniswapV2Library.getAmountsOut(factory, msg.value, path);
-        if(amounts[amounts.length - 1] < amountOutMin) revert UniswapV2RouterInsufficientOutputAmount();
+        if (amounts[amounts.length - 1] < amountOutMin) revert UniswapV2RouterInsufficientOutputAmount();
         IWETH(WETH).deposit{value: amounts[0]}();
         assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
@@ -270,9 +269,9 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if(path[path.length - 1] != WETH) revert UniswapV2RouterInvalidPath();
+        if (path[path.length - 1] != WETH) revert UniswapV2RouterInvalidPath();
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        if(amounts[0] > amountInMax) revert UniswapV2RouterExcessiveInputAmount();
+        if (amounts[0] > amountInMax) revert UniswapV2RouterExcessiveInputAmount();
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
@@ -288,9 +287,9 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if(path[path.length - 1] != WETH) revert UniswapV2RouterInvalidPath();
+        if (path[path.length - 1] != WETH) revert UniswapV2RouterInvalidPath();
         amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path);
-        if(amounts[amounts.length - 1] < amountOutMin) revert UniswapV2RouterInsufficientOutputAmount();
+        if (amounts[amounts.length - 1] < amountOutMin) revert UniswapV2RouterInsufficientOutputAmount();
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
@@ -307,9 +306,9 @@ contract UniswapV2Router02 is IUniswapV2Router01 {
         ensure(deadline)
         returns (uint256[] memory amounts)
     {
-        if(path[0] != WETH) revert UniswapV2RouterInvalidPath();
+        if (path[0] != WETH) revert UniswapV2RouterInvalidPath();
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        if(amounts[0] > msg.value) revert UniswapV2RouterExcessiveInputAmount();
+        if (amounts[0] > msg.value) revert UniswapV2RouterExcessiveInputAmount();
         IWETH(WETH).deposit{value: amounts[0]}();
         assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);

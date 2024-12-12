@@ -4,12 +4,7 @@ pragma solidity 0.8.11;
 import "./TestSetup.sol";
 
 contract CreateIncentiveTest is TestSetup {
-
-    function testCreateIncentive(
-        uint112 amount,
-        uint32 startTime,
-        uint32 endTime
-    ) public {
+    function testCreateIncentive(uint112 amount, uint32 startTime, uint32 endTime) public {
         _createIncentive(address(tokenA), address(tokenB), amount, startTime, endTime);
     }
 
@@ -51,10 +46,10 @@ contract CreateIncentiveTest is TestSetup {
     }
 
     function testStakeAndSubscribe(uint112 amount) public {
-      uint256[] memory idsToSubscribe = new uint256[](2);
-      idsToSubscribe[0] = pastIncentive;
-      idsToSubscribe[1] = ongoingIncentive;
-      _stakeAndSubscribeToIncentives(address(tokenA), amount, idsToSubscribe, johnDoe, true);
+        uint256[] memory idsToSubscribe = new uint256[](2);
+        idsToSubscribe[0] = pastIncentive;
+        idsToSubscribe[1] = ongoingIncentive;
+        _stakeAndSubscribeToIncentives(address(tokenA), amount, idsToSubscribe, johnDoe, true);
     }
 
     function testAccrue(uint112 amount) public {
@@ -203,22 +198,23 @@ contract CreateIncentiveTest is TestSetup {
     }
 
     function testBatch2() public {
-      bytes[] memory data = new bytes[](3);
-      uint256[] memory idsToSubscribe = new uint256[](3);
-      idsToSubscribe[0] = pastIncentive;
-      idsToSubscribe[1] = ongoingIncentive;
-      idsToSubscribe[2] = futureIncentive;
+        bytes[] memory data = new bytes[](3);
+        uint256[] memory idsToSubscribe = new uint256[](3);
+        idsToSubscribe[0] = pastIncentive;
+        idsToSubscribe[1] = ongoingIncentive;
+        idsToSubscribe[2] = futureIncentive;
 
-      data[0] = abi.encodeCall(stakingContract.stakeAndSubscribeToIncentives, (address(tokenA), 1, idsToSubscribe, true));
-      data[1] = abi.encodeCall(stakingContract.unsubscribeFromIncentive, (address(tokenA), 1, false));
-      data[2] = abi.encodeCall(stakingContract.unsubscribeFromIncentive, (address(tokenA), 0, false));
+        data[0] =
+            abi.encodeCall(stakingContract.stakeAndSubscribeToIncentives, (address(tokenA), 1, idsToSubscribe, true));
+        data[1] = abi.encodeCall(stakingContract.unsubscribeFromIncentive, (address(tokenA), 1, false));
+        data[2] = abi.encodeCall(stakingContract.unsubscribeFromIncentive, (address(tokenA), 0, false));
 
-      vm.prank(johnDoe);
-      stakingContract.batch(data);
-      (uint112 liquidity, uint144 subscriptions) = stakingContract.userStakes(johnDoe, address(tokenA));
+        vm.prank(johnDoe);
+        stakingContract.batch(data);
+        (uint112 liquidity, uint144 subscriptions) = stakingContract.userStakes(johnDoe, address(tokenA));
 
-      assertEq(liquidity, 1);
-      assertEq(subscriptions, pastIncentive);
+        assertEq(liquidity, 1);
+        assertEq(subscriptions, pastIncentive);
     }
 
     function testFailedBatchRaisesProperError() public {
@@ -230,5 +226,4 @@ contract CreateIncentiveTest is TestSetup {
         vm.expectRevert(alreadySubscribed);
         stakingContract.batch(data);
     }
-
 }

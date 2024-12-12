@@ -36,7 +36,9 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @param pair address of pair where NFTs are deposited
     /// @param vaultA vault data of deposited NFTs for first side
     /// @param vaultB vault data of deposited NFTs for second side
-    event NFTNFTLiquidityAdded(address indexed to, address pair, NftVaultLiquidityData vaultA, NftVaultLiquidityData vaultB);
+    event NFTNFTLiquidityAdded(
+        address indexed to, address pair, NftVaultLiquidityData vaultA, NftVaultLiquidityData vaultB
+    );
 
     /// @notice Emitted when NFT-ERC20 liquidity is removed
     /// @param to address that receives withdrawn assets
@@ -49,7 +51,9 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
     /// @param pair address of pair where NFTs are withdrawn
     /// @param vaultA vault data of withdrawn NFTs for first side
     /// @param vaultB vault data of withdrawn NFTs for second side
-    event NFTNFTLiquidityRemoved(address indexed to, address pair, NftVaultLiquidityData vaultA, NftVaultLiquidityData vaultB);
+    event NFTNFTLiquidityRemoved(
+        address indexed to, address pair, NftVaultLiquidityData vaultA, NftVaultLiquidityData vaultB
+    );
 
     /// @notice Deposit NFTs to vault
     /// @dev All NFTs must be approved for transfer. `_collection`, `_tokenId`
@@ -321,5 +325,4 @@ interface IMagicSwapV2Router is IUniswapV2Router01 {
         address _to,
         uint256 _deadline
     ) external returns (uint256[] memory amounts);
-
 }
