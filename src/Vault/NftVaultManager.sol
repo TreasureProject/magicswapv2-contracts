@@ -35,17 +35,9 @@ contract NftVaultManager {
 
         for (uint256 i = 0; i < _collections.length; i++) {
             collectionAddress = _collections[i];
-            INftVault.CollectionData memory collectionData = vault.getAllowedCollectionData(
-                collectionAddress
-            );
+            INftVault.CollectionData memory collectionData = vault.getAllowedCollectionData(collectionAddress);
             if (collectionData.nftType == INftVault.NftType.ERC1155) {
-                IERC1155(collectionAddress).safeTransferFrom(
-                    msg.sender,
-                    _vault,
-                    _tokenIds[i],
-                    _amounts[i],
-                    ""
-                );
+                IERC1155(collectionAddress).safeTransferFrom(msg.sender, _vault, _tokenIds[i], _amounts[i], "");
             } else if (collectionData.nftType == INftVault.NftType.ERC721) {
                 IERC721(collectionAddress).safeTransferFrom(msg.sender, _vault, _tokenIds[i]);
             } else {

@@ -238,9 +238,7 @@ contract StakingContractMainnet is ReentrancyGuard {
         uint256 n = incentiveIds.length;
 
         for (uint256 i = 0; i < n; i = _increment(i)) {
-
             subscribeToIncentive(incentiveIds[i]);
-
         }
     }
 

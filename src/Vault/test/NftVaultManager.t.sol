@@ -83,21 +83,14 @@ contract NftVaultManagerTest is Test {
         vm.prank(user1);
         nftVault.approve(address(nftVaultManager), type(uint256).max);
         vm.prank(user1);
-        uint256 amountBurned = nftVaultManager.withdrawBatch(
-            address(nftVault),
-            tempCollections,
-            tempTokenIds,
-            tempAmounts
-        );
+        uint256 amountBurned =
+            nftVaultManager.withdrawBatch(address(nftVault), tempCollections, tempTokenIds, tempAmounts);
 
         assertEq(amountBurned, amountMinted721);
         assertEq(nftVault.balanceOf(user1), 0);
         assertEq(ERC721Mintable(_collections[0].addr).ownerOf(_tokenId), address(nftVault));
         assertEq(ERC1155Mintable(_collections[1].addr).balanceOf(user1, _tokenId), 1);
-        assertEq(
-            ERC1155Mintable(_collections[1].addr).balanceOf(address(nftVault), _tokenId),
-            _amount - 1
-        );
+        assertEq(ERC1155Mintable(_collections[1].addr).balanceOf(address(nftVault), _tokenId), _amount - 1);
 
         uint256 transferAmount = amountMinted1155 - nftVault.ONE();
         tempCollections[0] = collections[1].addr;
@@ -106,12 +99,7 @@ contract NftVaultManagerTest is Test {
         vm.prank(user2);
         nftVault.approve(address(nftVaultManager), type(uint256).max);
         vm.prank(user2);
-        amountBurned = nftVaultManager.withdrawBatch(
-            address(nftVault),
-            tempCollections,
-            tempTokenIds,
-            tempAmounts
-        );
+        amountBurned = nftVaultManager.withdrawBatch(address(nftVault), tempCollections, tempTokenIds, tempAmounts);
 
         assertEq(amountBurned, transferAmount);
         assertEq(nftVault.balanceOf(user2), nftVault.ONE());
@@ -124,12 +112,7 @@ contract NftVaultManagerTest is Test {
         tempAmounts[0] = 1;
 
         vm.prank(user2);
-        amountBurned = nftVaultManager.withdrawBatch(
-            address(nftVault),
-            tempCollections,
-            tempTokenIds,
-            tempAmounts
-        );
+        amountBurned = nftVaultManager.withdrawBatch(address(nftVault), tempCollections, tempTokenIds, tempAmounts);
 
         assertEq(amountBurned, transferAmount);
         assertEq(nftVault.balanceOf(user2), 0);
@@ -154,17 +137,11 @@ contract NftVaultManagerTest is Test {
                 ERC721Mintable(collections[i].addr).mint(user1, _tokenId);
 
                 vm.prank(user1);
-                ERC721Mintable(collections[i].addr).setApprovalForAll(
-                    address(nftVaultManager),
-                    true
-                );
+                ERC721Mintable(collections[i].addr).setApprovalForAll(address(nftVaultManager), true);
             } else {
                 ERC1155Mintable(collections[i].addr).mint(user1, _tokenId, _amount);
                 vm.prank(user1);
-                ERC1155Mintable(collections[i].addr).setApprovalForAll(
-                    address(nftVaultManager),
-                    true
-                );
+                ERC1155Mintable(collections[i].addr).setApprovalForAll(address(nftVaultManager), true);
             }
 
             uint256 balancesBefore = vault.balances(collections[i].addr, _tokenId);
@@ -181,12 +158,8 @@ contract NftVaultManagerTest is Test {
             tempAmounts[0] = _amount;
 
             vm.prank(user1);
-            uint256 amountMinted = nftVaultManager.depositBatch(
-                address(vault),
-                tempCollections,
-                tempTokenIds,
-                tempAmounts
-            );
+            uint256 amountMinted =
+                nftVaultManager.depositBatch(address(vault), tempCollections, tempTokenIds, tempAmounts);
 
             assertEq(amountMinted / vault.ONE(), _amount);
             assertEq(vault.balanceOf(user1), erc20balanceBefore + amountMinted);

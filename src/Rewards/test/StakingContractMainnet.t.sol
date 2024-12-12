@@ -150,7 +150,9 @@ contract CreateIncentiveTest is TestSetup {
     function testClaimRoundedRewards() public {
         uint112 amount = testIncentiveAmount;
         uint256 duration = testIncentiveDuration;
-        uint256 incentiveId = _createIncentive(address(tokenA), address(tokenB), amount, uint32(block.timestamp), uint32(block.timestamp + duration), true);
+        uint256 incentiveId = _createIncentive(
+            address(tokenA), address(tokenB), amount, uint32(block.timestamp), uint32(block.timestamp + duration), true
+        );
         uint256[] memory incentiveIds = new uint256[](1);
         incentiveIds[0] = incentiveId;
         StakingContractMainnet.Incentive memory incentive = _getIncentive(incentiveId);
@@ -165,8 +167,8 @@ contract CreateIncentiveTest is TestSetup {
         vm.warp(incentive.lastRewardTime + 86400);
 
         // Each user got 1/60 of the total reward amount
-        (, , uint256 johnDoeReward) = _calculateReward(incentiveId, johnDoe);
-        (, , uint256 janeDoeReward) = _calculateReward(incentiveId, janeDoe);
+        (,, uint256 johnDoeReward) = _calculateReward(incentiveId, johnDoe);
+        (,, uint256 janeDoeReward) = _calculateReward(incentiveId, janeDoe);
         assertEq(johnDoeReward, 16666666666666666666);
         assertEq(janeDoeReward, 16666666666666666666);
 
@@ -176,11 +178,11 @@ contract CreateIncentiveTest is TestSetup {
         assertEq(johnDoeClaimed[0], 16000000000000000000);
 
         // User still has some rewards pending
-        (, , johnDoeReward) = _calculateReward(incentiveId, johnDoe);
+        (,, johnDoeReward) = _calculateReward(incentiveId, johnDoe);
         assertEq(johnDoeReward, 666666666666666666);
 
         // Other user still has the same reward
-        (, , janeDoeReward) = _calculateReward(incentiveId, janeDoe);
+        (,, janeDoeReward) = _calculateReward(incentiveId, janeDoe);
         assertEq(janeDoeReward, 16666666666666666666);
     }
 
