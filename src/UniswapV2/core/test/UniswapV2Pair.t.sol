@@ -227,7 +227,13 @@ contract UniswapV2PairTest is Test {
         _assertPairs(pair, pairOriginal);
     }
 
-    function testSwapWithFees(uint96 _reserve0, uint96 _reserve1, uint72 _amount0In, uint72 _amount1In, uint256 _hijackAmount) public {
+    function testSwapWithFees(
+        uint96 _reserve0,
+        uint96 _reserve1,
+        uint72 _amount0In,
+        uint72 _amount1In,
+        uint256 _hijackAmount
+    ) public {
         vm.assume(_reserve0 > 10000e18);
         vm.assume(_reserve1 > 10000e18);
         vm.assume(_amount0In > 0.001e18);

@@ -5,7 +5,6 @@ import "ds-test/test.sol";
 import "../libraries/PackedUint144.sol";
 
 contract PackedUintTest is DSTest {
-
     using PackedUint144 for uint144;
 
     function testCountStoredUint24Values(uint24 a) public {
@@ -77,5 +76,4 @@ contract PackedUintTest is DSTest {
         assertEq(packed.removeUint24ValueAt(5), uint144(bytes18(abi.encodePacked(nil, b, c, d, e, f))));
         assertEq(packed.removeUint24ValueAt(6), uint144(bytes18(abi.encodePacked(a, b, c, d, e, f))));
     }
-
 }
