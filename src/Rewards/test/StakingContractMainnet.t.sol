@@ -5,11 +5,11 @@ import "./TestSetup.sol";
 
 contract CreateIncentiveTest is TestSetup {
     function testCreateIncentive(uint112 amount, uint32 startTime, uint32 endTime) public {
-        _createIncentive(address(tokenA), address(tokenB), amount, startTime, endTime);
+        _createIncentive(address(tokenA), address(tokenB), amount, startTime, endTime, false);
     }
 
     function testFailCreateIncentiveInvalidRewardToken(uint32 startTime, uint32 endTime) public {
-        _createIncentive(address(tokenA), zeroAddress, 1, startTime, endTime);
+        _createIncentive(address(tokenA), zeroAddress, 1, startTime, endTime, false);
     }
 
     function testUpdateIncentive(
@@ -145,6 +145,45 @@ contract CreateIncentiveTest is TestSetup {
             assertEqInexact(maxRatio * reward1 / reward0, ratio, 10);
         }
         assertEqInexact(reward0 + reward1 + soloReward, totalReward, 10);
+    }
+
+    function testClaimRoundedRewards() public {
+        uint112 amount = testIncentiveAmount;
+        uint256 duration = testIncentiveDuration;
+        uint256 incentiveId = _createIncentive(
+            address(tokenA), address(tokenB), amount, uint32(block.timestamp), uint32(block.timestamp + duration), true
+        );
+        uint256[] memory incentiveIds = new uint256[](1);
+        incentiveIds[0] = incentiveId;
+        StakingContractMainnet.Incentive memory incentive = _getIncentive(incentiveId);
+
+        // 2 users stake and subscribe
+        _stake(address(tokenA), 1, johnDoe, true);
+        _stake(address(tokenA), 1, janeDoe, true);
+        _subscribeToIncentive(incentiveId, johnDoe);
+        _subscribeToIncentive(incentiveId, janeDoe);
+
+        // 1/30 the time has passed
+        vm.warp(incentive.lastRewardTime + 86400);
+
+        // Each user got 1/60 of the total reward amount
+        (,, uint256 johnDoeReward) = _calculateReward(incentiveId, johnDoe);
+        (,, uint256 janeDoeReward) = _calculateReward(incentiveId, janeDoe);
+        assertEq(johnDoeReward, 16666666666666666666);
+        assertEq(janeDoeReward, 16666666666666666666);
+
+        // 1 user claims
+        vm.prank(johnDoe);
+        uint256[] memory johnDoeClaimed = stakingContract.claimRewards(incentiveIds);
+        assertEq(johnDoeClaimed[0], 16000000000000000000);
+
+        // User still has some rewards pending
+        (,, johnDoeReward) = _calculateReward(incentiveId, johnDoe);
+        assertEq(johnDoeReward, 666666666666666666);
+
+        // Other user still has the same reward
+        (,, janeDoeReward) = _calculateReward(incentiveId, janeDoe);
+        assertEq(janeDoeReward, 16666666666666666666);
     }
 
     function testUnstakeSaveRewards() public {

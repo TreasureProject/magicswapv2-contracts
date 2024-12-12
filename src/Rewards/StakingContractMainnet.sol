@@ -20,6 +20,7 @@ contract StakingContractMainnet is ReentrancyGuard {
         address token; // 2nd slot
         address rewardToken; // 3rd slot
         uint32 endTime; // 3rd slot
+        bool isRewardRounded; // 3rd slot
         uint256 rewardPerLiquidity; // 4th slot
         uint32 lastRewardTime; // 5th slot
         uint112 rewardRemaining; // 5th slot
@@ -74,11 +75,14 @@ contract StakingContractMainnet is ReentrancyGuard {
     event Unsubscribe(uint256 indexed id, address indexed user);
     event Claim(uint256 indexed id, address indexed user, uint256 amount);
 
-    function createIncentive(address token, address rewardToken, uint112 rewardAmount, uint32 startTime, uint32 endTime)
-        external
-        nonReentrant
-        returns (uint256 incentiveId)
-    {
+    function createIncentive(
+        address token,
+        address rewardToken,
+        uint112 rewardAmount,
+        uint32 startTime,
+        uint32 endTime,
+        bool isRewardRounded
+    ) external nonReentrant returns (uint256 incentiveId) {
         if (rewardAmount <= 0) revert InvalidInput();
 
         if (startTime < block.timestamp) startTime = uint32(block.timestamp);
@@ -99,6 +103,7 @@ contract StakingContractMainnet is ReentrancyGuard {
             rewardToken: rewardToken,
             lastRewardTime: startTime,
             endTime: endTime,
+            isRewardRounded: isRewardRounded,
             rewardRemaining: rewardAmount,
             liquidityStaked: 0,
             // Initial value of rewardPerLiquidity can be arbitrarily set to a non-zero value.
@@ -229,6 +234,14 @@ contract StakingContractMainnet is ReentrancyGuard {
         emit Unstake(token, msg.sender, amount);
     }
 
+    function subscribeToIncentives(uint256[] memory incentiveIds) external {
+        uint256 n = incentiveIds.length;
+
+        for (uint256 i = 0; i < n; i = _increment(i)) {
+            subscribeToIncentive(incentiveIds[i]);
+        }
+    }
+
     function subscribeToIncentive(uint256 incentiveId) public nonReentrant {
         if (incentiveId > incentiveCount || incentiveId <= 0) revert InvalidInput();
 
@@ -302,6 +315,24 @@ contract StakingContractMainnet is ReentrancyGuard {
         }
     }
 
+    /// @dev Claims rewards for all incentives in the list, skipping reward rounding.
+    function claimAllRewards(uint256[] calldata incentiveIds)
+        external
+        nonReentrant
+        returns (uint256[] memory rewards)
+    {
+        uint256 n = incentiveIds.length;
+        rewards = new uint256[](n);
+        for (uint256 i = 0; i < n; i = _increment(i)) {
+            if (incentiveIds[i] > incentiveCount || incentiveIds[i] <= 0) revert InvalidInput();
+
+            Incentive storage incentive = incentives[incentiveIds[i]];
+            _accrueRewards(incentive);
+            rewards[i] =
+                _claimReward(incentive, incentiveIds[i], userStakes[msg.sender][incentive.token].liquidity, true);
+        }
+    }
+
     function _accrueRewards(Incentive storage incentive) internal {
         uint256 lastRewardTime = incentive.lastRewardTime;
 
@@ -333,12 +364,30 @@ contract StakingContractMainnet is ReentrancyGuard {
         internal
         returns (uint256 reward)
     {
+        return _claimReward(incentive, incentiveId, usersLiquidity, false);
+    }
+
+    function _claimReward(Incentive storage incentive, uint256 incentiveId, uint112 usersLiquidity, bool skipRounding)
+        internal
+        returns (uint256 reward)
+    {
         reward = _calculateReward(incentive, incentiveId, usersLiquidity);
 
-        rewardPerLiquidityLast[msg.sender][incentiveId] = incentive.rewardPerLiquidity;
+        uint256 rewardDelta;
+        // Check if the reward should be rounded
+        if (!skipRounding && incentive.isRewardRounded) {
+            uint8 decimals = ERC20(incentive.rewardToken).decimals();
+            uint256 roundedReward = reward / 10 ** decimals * 10 ** decimals;
+            // Delta of rewards to be left claimable for the user in the future
+            rewardDelta = reward - roundedReward;
+            reward = roundedReward;
+        }
+
+        // Calculate the reward per liquidity delta based on actual rewards given
+        uint256 rewardPerLiquidityDelta = rewardDelta * type(uint112).max / usersLiquidity;
+        rewardPerLiquidityLast[msg.sender][incentiveId] = incentive.rewardPerLiquidity - rewardPerLiquidityDelta;
 
         ERC20(incentive.rewardToken).safeTransfer(msg.sender, reward);
-
         emit Claim(incentiveId, msg.sender, reward);
     }
 

@@ -131,10 +131,10 @@ contract UniswapV2PairTest is Test {
     }
 
     function testSwapRegression(uint96 _reserve0, uint96 _reserve1, uint72 _amount0In, uint72 _amount1In) public {
-        vm.assume(_reserve0 > 10000e18);
-        vm.assume(_reserve1 > 10000e18);
-        vm.assume(_amount0In > 0.001e18);
-        vm.assume(_amount1In > 0.001e18);
+        _reserve0 = uint96(bound(_reserve0, 10000e18, type(uint96).max));
+        _reserve1 = uint96(bound(_reserve1, 10000e18, type(uint96).max));
+        _amount0In = uint72(bound(_amount0In, 0.001e18, type(uint72).max));
+        _amount1In = uint72(bound(_amount1In, 0.001e18, type(uint72).max));
 
         _addLiquidity(address(pair), _reserve0, _reserve1, user3);
         _addLiquidity(address(pairOriginal), _reserve0, _reserve1, user3);
@@ -172,10 +172,10 @@ contract UniswapV2PairTest is Test {
     }
 
     function testSkimRegression(uint96 _reserve0, uint96 _reserve1, uint72 _amount0In, uint72 _amount1In) public {
-        vm.assume(_reserve0 > 10000e18);
-        vm.assume(_reserve1 > 10000e18);
-        vm.assume(_amount0In > 0.001e18);
-        vm.assume(_amount1In > 0.001e18);
+        _reserve0 = uint96(bound(_reserve0, 10000e18, type(uint96).max));
+        _reserve1 = uint96(bound(_reserve1, 10000e18, type(uint96).max));
+        _amount0In = uint72(bound(_amount0In, 0.001e18, type(uint72).max));
+        _amount1In = uint72(bound(_amount1In, 0.001e18, type(uint72).max));
 
         _addLiquidity(address(pair), _reserve0, _reserve1, user3);
         _addLiquidity(address(pairOriginal), _reserve0, _reserve1, user3);
@@ -204,10 +204,10 @@ contract UniswapV2PairTest is Test {
     }
 
     function testSyncRegression(uint96 _reserve0, uint96 _reserve1, uint72 _amount0In, uint72 _amount1In) public {
-        vm.assume(_reserve0 > 10000e18);
-        vm.assume(_reserve1 > 10000e18);
-        vm.assume(_amount0In > 0.001e18);
-        vm.assume(_amount1In > 0.001e18);
+        _reserve0 = uint96(bound(_reserve0, 10000e18, type(uint96).max));
+        _reserve1 = uint96(bound(_reserve1, 10000e18, type(uint96).max));
+        _amount0In = uint72(bound(_amount0In, 0.001e18, type(uint72).max));
+        _amount1In = uint72(bound(_amount1In, 0.001e18, type(uint72).max));
 
         _addLiquidity(address(pair), _reserve0, _reserve1, user3);
         _addLiquidity(address(pairOriginal), _reserve0, _reserve1, user3);
@@ -234,10 +234,10 @@ contract UniswapV2PairTest is Test {
         uint72 _amount1In,
         uint256 _hijackAmount
     ) public {
-        vm.assume(_reserve0 > 10000e18);
-        vm.assume(_reserve1 > 10000e18);
-        vm.assume(_amount0In > 0.001e18);
-        vm.assume(_amount1In > 0.001e18);
+        _reserve0 = uint96(bound(_reserve0, 10000e18, type(uint96).max));
+        _reserve1 = uint96(bound(_reserve1, 10000e18, type(uint96).max));
+        _amount0In = uint72(bound(_amount0In, 0.001e18, type(uint72).max));
+        _amount1In = uint72(bound(_amount1In, 0.001e18, type(uint72).max));
         vm.assume(_amount0In > _hijackAmount);
 
         _addLiquidity(address(pairWithFees), _reserve0, _reserve1, user3);
