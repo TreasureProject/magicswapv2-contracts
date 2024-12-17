@@ -8,6 +8,7 @@ import { getUniswapV2BytecodeHash } from "./scripts/getUniswapV2BytecodeHash";
 
 
 const devKmsKey = process.env.DEV_KMS_RESOURCE_ID;
+const prodKmsKey = process.env.PROD_KMS_RESOURCE_ID;
 
 const config: HardhatUserConfig = {
   defaultNetwork: "zkSyncSepolia",
@@ -38,6 +39,17 @@ const config: HardhatUserConfig = {
       zksync: false,
       kmsKeyId: devKmsKey,
     },
+    treasureMainnet: {
+      url: `${process.env.TREASURE_MAINNET_RPC}`,
+      kmsKeyId: prodKmsKey,
+      ethNetwork: 'mainnet',
+      chainId: 0xeeee,
+      live: true,
+      saveDeployments: true,
+      gasMultiplier: 2,
+      verifyURL: 'https://rpc-explorer-verify.treasure.lol/contract_verification',
+      zksync: true,
+  },
     dockerizedNode: {
       url: "http://localhost:3050",
       ethNetwork: "http://localhost:8545",
