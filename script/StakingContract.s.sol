@@ -2,7 +2,7 @@
 pragma solidity >=0.8.13;
 
 import "forge-std/Script.sol";
-import "../src/Rewards/StakingContractMainnet.sol";
+import "../contracts/Rewards/StakingContractMainnet.sol";
 
 contract StakingContractScript is Script {
     function run() public {

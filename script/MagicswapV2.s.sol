@@ -2,9 +2,9 @@
 pragma solidity >=0.8.13;
 
 import "forge-std/Script.sol";
-import "../src/Vault/NftVaultFactory.sol";
-import "../src/UniswapV2/core/UniswapV2Factory.sol";
-import "../src/Router/MagicSwapV2Router.sol";
+import "../contracts/Vault/NftVaultFactory.sol";
+import "../contracts/UniswapV2/core/UniswapV2Factory.sol";
+import "../contracts/Router/MagicSwapV2Router.sol";
 
 contract MagicswapV2Script is Script {
     function run() public {
