@@ -8,7 +8,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const protocolFee = 30n; // 0.3%
   const lpFee = 30n; // 0.3%
-  const protocolFeeBeneficiary = "0x0eB5B03c0303f2F47cD81d7BE4275AF8Ed347576"; // L2 Treasury
+  const protocolFeeBeneficiary = "0xA65d67513328445B4A4D2F498624483c2601ddA4"; // L2 Treasury
 
   const uniswapFactoryConstructorArguments = [protocolFee, lpFee, protocolFeeBeneficiary];
   const factory = await deploy('UniswapV2Factory', {
@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log("UniswapV2Factory deployed to:", factory.address);
 
-  const wMagic = "0x095ded714d42cBD5fb2E84A0FfbFb140E38dC9E1";
+  const wMagic = "0x263D8f36Bb8d0d9526255E205868C26690b04B88";
   const routerConstructorArguments = [factory.address, wMagic];
   const magicSwapV2Router = await deploy('MagicSwapV2Router', {
     from: deployer,
