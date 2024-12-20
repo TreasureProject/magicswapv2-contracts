@@ -1,0 +1,51 @@
+name: CI
+
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ZKSync Foundry
+        uses: dutterbutter/foundry-zksync-toolchain@v1
+
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+            version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Build Hardhat
+        run: pnpm compile
+
+      - name: Forge Build
+        run: pnpm compile:forge
+
+      - name: Forge Fmt
+        run: pnpm style:solidity
+
+      - name: Test Hardhat
+        run: pnpm test:hardhat
+
+      - name: Forge Test
+        run: pnpm test:forge
+
+
+

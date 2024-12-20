@@ -1,0 +1,42 @@
+{
+  "name": "magicswapv2-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy:zksync-sepolia": "hardhat deploy-zksync --script deploy.ts --network zkSyncSepolia",
+    "deploy:treasure-topaz": "hardhat deploy-zksync --network treasureTopaz",
+    "deploy:treasure-mainnet": "hardhat deploy-zksync --network treasureMainnet",
+    "deploy:arbitrum-sepolia": "hardhat deploy --network arbitrumSepolia",
+    "deploy:arbitrum-one": "hardhat deploy --network arbitrumOne",
+    "compile": "hardhat compile",
+    "compile:forge": "forge build",
+    "clean": "hardhat clean",
+    "test:hardhat": "hardhat test --network hardhat",
+    "test:forge": "forge test --zksync",
+    "style:solidity": "forge fmt"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@matterlabs/hardhat-zksync": "^1.1.0",
+    "@matterlabs/hardhat-zksync-verify": "^1.6.0",
+    "@matterlabs/zksync-contracts": "^0.6.1",
+    "@nomicfoundation/hardhat-foundry": "^1.1.2",
+    "@nomicfoundation/hardhat-verify": "^2.0.9",
+    "@openzeppelin/contracts": "^4.9.2",
+    "@treasure-dev/hardhat-kms": "^1.0.0",
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.7",
+    "chai": "^4.5.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
+    "hardhat": "^2.22.7",
+    "hardhat-deploy": "^0.12.4",
+    "mocha": "^10.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4",
+    "zksync-ethers": "^6.11.0"
+  }
+}
