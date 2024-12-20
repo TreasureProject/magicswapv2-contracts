@@ -35,14 +35,11 @@ jobs:
       - name: Build Hardhat
         run: pnpm compile
 
-      - name: Style
-        run: pnpm style
-
       - name: Forge Build
-        run: pnpm forge-build
+        run: pnpm compile:forge
 
       - name: Forge Fmt
-        run: pnpm forge-fmt
+        run: pnpm style:solidity
 
       - name: Test Hardhat
         run: pnpm test:hardhat

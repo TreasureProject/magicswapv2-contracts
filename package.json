@@ -10,9 +10,11 @@
     "deploy:arbitrum-sepolia": "hardhat deploy --network arbitrumSepolia",
     "deploy:arbitrum-one": "hardhat deploy --network arbitrumOne",
     "compile": "hardhat compile",
+    "compile:forge": "forge build",
     "clean": "hardhat clean",
     "test:hardhat": "hardhat test --network hardhat",
-    "test:forge": "forge test --zksync"
+    "test:forge": "forge test --zksync",
+    "style:solidity": "forge fmt"
   },
   "keywords": [],
   "author": "",
