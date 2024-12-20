@@ -4,9 +4,11 @@ pragma solidity 0.8.20;
 import {Test} from "forge-std/Test.sol";
 
 contract TestHelper is Test {
-    function patchUniswapV2Library(address contractUsingUniswapV2Library, string memory contractFilename, bytes memory args)
-        public
-    {
+    function patchUniswapV2Library(
+        address contractUsingUniswapV2Library,
+        string memory contractFilename,
+        bytes memory args
+    ) public {
         bytes memory bytecode = abi.encodePacked(vm.getCode(contractFilename), args);
 
         bytes32 ORIGINAL_INIT_CODE_HASH = 0x010004df694643e2d7e17535f16c21e9d1698b06c2ef330166830639b23b7f43;

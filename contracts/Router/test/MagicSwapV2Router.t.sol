@@ -9,7 +9,7 @@ import {ERC721Mintable} from "lib/ERC721Mintable.sol";
 import {ERC1155Mintable} from "lib/ERC1155Mintable.sol";
 
 import {WETH} from "./mock/WETH.sol";
-import { IMagicSwapV2Router, MagicSwapV2Router} from "../MagicSwapV2Router.sol";
+import {IMagicSwapV2Router, MagicSwapV2Router} from "../MagicSwapV2Router.sol";
 import {UniswapV2Factory} from "../../UniswapV2/core/UniswapV2Factory.sol";
 import {IUniswapV2Router01} from "../../UniswapV2/periphery/interfaces/IUniswapV2Router01.sol";
 import {NftVaultFactory, INftVault} from "../../Vault/NftVaultFactory.sol";
