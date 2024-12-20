@@ -14,7 +14,6 @@ contract TestHelper is Test {
         bytes32 ORIGINAL_INIT_CODE_HASH = 0x010004df694643e2d7e17535f16c21e9d1698b06c2ef330166830639b23b7f43;
         bytes32 NEW_INIT_CODE_HASH = 0x010004dba4c88c36b9cf5b708cdea396e454c1d162b487daa289669537fe8f0d;
 
-        // bytecode = contractUsingUniswapV2Library.code;
         bytecode = veryBadBytesReplacer(bytecode, ORIGINAL_INIT_CODE_HASH, NEW_INIT_CODE_HASH);
         vm.etch(contractUsingUniswapV2Library, bytecode);
     }
