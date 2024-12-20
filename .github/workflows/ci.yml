@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install ZKSync Foundry
-        run: curl -L https://raw.githubusercontent.com/matter-labs/foundry-zksync/main/install-foundry-zksync | bash
+        uses: dutterbutter/foundry-zksync-toolchain@v1
 
       - name: Check out the repo
         uses: actions/checkout@v4
