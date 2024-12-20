@@ -11,7 +11,7 @@ import "../NftVault.sol";
 import "../NftVaultFactory.sol";
 
 contract NftVaultTest is Test {
-    NftVaultFactory public nftVaultFactory = new NftVaultFactory();
+    NftVaultFactory public nftVaultFactory;
 
     address user1 = address(1001);
     address user2 = address(1002);
@@ -39,6 +39,7 @@ contract NftVaultTest is Test {
     event Deposit(address indexed to, address indexed collection, uint256 tokenId, uint256 amount);
 
     function setUp() public {
+        nftVaultFactory = new NftVaultFactory();
         collectionERC721all = INftVault.CollectionData({
             addr: address(new ERC721Mintable()),
             nftType: INftVault.NftType.ERC721,

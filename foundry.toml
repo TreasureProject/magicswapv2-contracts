@@ -7,7 +7,6 @@ cache_path  = 'cache_forge'
 bytecode_hash = 'none'
 solc_version = '0.8.20'
 
-
 [etherscan]
 arbitrum = { key = "${ARBISCAN_API_KEY}" }
 arbitrum-sepolia = { key = "${ARBISCAN_API_KEY}", chain = "arbitrum-sepolia", url = "https://api-sepolia.arbiscan.io/api"}

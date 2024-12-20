@@ -1,0 +1,47 @@
+name: CI
+
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ZKSync Foundry
+        run: curl -L https://raw.githubusercontent.com/matter-labs/foundry-zksync/main/install-foundry-zksync | bash
+
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Build Hardhat
+        run: pnpm compile
+
+      - name: Style
+        run: pnpm style
+
+      - name: Forge Build
+        run: pnpm forge-build
+
+      - name: Forge Fmt
+        run: pnpm forge-fmt
+
+      - name: Test Hardhat
+        run: pnpm test:hardhat
+
+      - name: Forge Test
+        run: pnpm test:forge
+
+
+

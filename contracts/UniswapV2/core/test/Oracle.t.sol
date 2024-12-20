@@ -24,15 +24,19 @@ contract OracleTest is Test {
     UniswapV2Pair public pair;
     UniswapV2Factory factory;
 
-    ERC20Mintable public DAI = new ERC20Mintable();
-    ERC20Mintable public WETH = new ERC20Mintable();
-    OracleImpl public oracleImpl = new OracleImpl();
+    ERC20Mintable public DAI;
+    ERC20Mintable public WETH;
+    OracleImpl public oracleImpl;
 
     address user1 = address(10000001);
 
     address protocolFeeBeneficiary = address(10000005);
 
     function setUp() public {
+        DAI = new ERC20Mintable();
+        WETH = new ERC20Mintable();
+        oracleImpl = new OracleImpl();
+
         vm.warp(TIMESTAMP);
 
         factory = new UniswapV2Factory(150, 30, protocolFeeBeneficiary);

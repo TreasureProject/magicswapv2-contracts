@@ -26,17 +26,22 @@ contract TestSetup is Test {
     bytes4 panic = 0x4e487b71;
     bytes overflow = abi.encodePacked(panic, bytes32(uint256(0x11)));
 
-    StakingContractMainnet stakingContract = new StakingContractMainnet();
+    StakingContractMainnet stakingContract;
 
-    Token tokenA = new Token();
-    Token tokenB = new Token();
-    Token tokenC = new Token();
+    Token tokenA;
+    Token tokenB;
+    Token tokenC;
 
     uint256 pastIncentive;
     uint256 ongoingIncentive;
     uint256 futureIncentive;
 
     function setUp() public {
+        stakingContract = new StakingContractMainnet();
+        tokenA = new Token();
+        tokenB = new Token();
+        tokenC = new Token();
+
         tokenA.mint(MAX_UINT256);
         tokenB.mint(MAX_UINT256);
         tokenC.mint(MAX_UINT256);
