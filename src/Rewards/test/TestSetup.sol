@@ -60,18 +60,19 @@ contract TestSetup is Test {
 
         vm.warp(currentTime - duration);
         pastIncentive = _createIncentive(
-            address(tokenA), address(tokenB), amount, uint32(block.timestamp), uint32(block.timestamp + duration)
+            address(tokenA), address(tokenB), amount, uint32(block.timestamp), uint32(block.timestamp + duration), false
         );
         vm.warp(currentTime);
         ongoingIncentive = _createIncentive(
-            address(tokenA), address(tokenB), amount, uint32(block.timestamp), uint32(block.timestamp + duration)
+            address(tokenA), address(tokenB), amount, uint32(block.timestamp), uint32(block.timestamp + duration), false
         );
         futureIncentive = _createIncentive(
             address(tokenA),
             address(tokenB),
             amount,
             uint32(block.timestamp + duration),
-            uint32(block.timestamp + duration * 2)
+            uint32(block.timestamp + duration * 2),
+            false
         );
     }
 
@@ -83,25 +84,29 @@ contract TestSetup is Test {
         assertTrue(true);
     }
 
-    function _createIncentive(address token, address rewardToken, uint112 amount, uint32 startTime, uint32 endTime)
-        public
-        returns (uint256)
-    {
+    function _createIncentive(
+        address token,
+        address rewardToken,
+        uint112 amount,
+        uint32 startTime,
+        uint32 endTime,
+        bool isRewardRounded
+    ) public returns (uint256) {
         uint256 count = stakingContract.incentiveCount();
         uint256 thisBalance = Token(rewardToken).balanceOf(address(this));
         uint256 stakingContractBalance = Token(rewardToken).balanceOf(address(stakingContract));
 
         if (amount <= 0) {
             vm.expectRevert(invalidInput);
-            return stakingContract.createIncentive(token, rewardToken, amount, startTime, endTime);
+            return stakingContract.createIncentive(token, rewardToken, amount, startTime, endTime, isRewardRounded);
         }
 
         if (endTime <= startTime || endTime <= block.timestamp) {
             vm.expectRevert(invalidTimeFrame);
-            return stakingContract.createIncentive(token, rewardToken, amount, startTime, endTime);
+            return stakingContract.createIncentive(token, rewardToken, amount, startTime, endTime, isRewardRounded);
         }
 
-        uint256 id = stakingContract.createIncentive(token, rewardToken, amount, startTime, endTime);
+        uint256 id = stakingContract.createIncentive(token, rewardToken, amount, startTime, endTime, isRewardRounded);
 
         StakingContractMainnet.Incentive memory incentive = _getIncentive(id);
 
@@ -426,13 +431,22 @@ contract TestSetup is Test {
             address token,
             address rewardToken,
             uint32 endTime,
+            bool isRewardRounded,
             uint256 rewardPerLiquidity,
             uint32 lastRewardTime,
             uint112 rewardRemaining,
             uint112 liquidityStaked
         ) = stakingContract.incentives(id);
         incentive = StakingContractMainnet.Incentive(
-            creator, token, rewardToken, endTime, rewardPerLiquidity, lastRewardTime, rewardRemaining, liquidityStaked
+            creator,
+            token,
+            rewardToken,
+            endTime,
+            isRewardRounded,
+            rewardPerLiquidity,
+            lastRewardTime,
+            rewardRemaining,
+            liquidityStaked
         );
     }
 

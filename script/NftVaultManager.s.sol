@@ -2,13 +2,13 @@
 pragma solidity >=0.8.13;
 
 import "forge-std/Script.sol";
-import "../src/Rewards/StakingContractMainnet.sol";
+import "../src/Vault/NftVaultManager.sol";
 
-contract StakingContractScript is Script {
+contract NftVaultManagerScript is Script {
     function run() public {
         vm.startBroadcast();
 
-        new StakingContractMainnet();
+        new NftVaultManager();
 
         vm.stopBroadcast();
     }
