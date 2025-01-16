@@ -4,56 +4,52 @@ import "@matterlabs/hardhat-zksync";
 import "@matterlabs/hardhat-zksync-verify";
 import "@nomicfoundation/hardhat-foundry";
 import { HardhatUserConfig, task } from "hardhat/config";
-import { getUniswapV2BytecodeHash } from "./scripts/getUniswapV2BytecodeHash";
+import "dotenv/config";
 
+import { getUniswapV2BytecodeHash } from "./scripts/getUniswapV2BytecodeHash";
 
 const devKmsKey = process.env.DEV_KMS_RESOURCE_ID;
 const prodKmsKey = process.env.PROD_KMS_RESOURCE_ID;
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "zkSyncSepolia",
+  defaultNetwork: "treasureTopaz",
   networks: {
-    zkSyncSepolia: {
-      url: process.env.ZKSYNC_SEPOLIA_RPC ?? "",
-      ethNetwork: "sepolia",
-      zksync: true,
-      verifyURL: process.env.ZKSYNC_SEPOLIA_VERIFY ?? "",
-      kmsKeyId: devKmsKey,
-    },
     treasureTopaz: {
-      url: process.env.TREASURE_TOPAZ_RPC ?? "",
+      url: "https://rpc.topaz.treasure.lol",
       ethNetwork: "sepolia",
+      chainId: 0xeeee2,
       zksync: true,
-      verifyURL: process.env.TREASURE_TOPAZ_VERIFY ?? "",
-      kmsKeyId: devKmsKey,
-    },
-    arbitrumSepolia: {
-      url: process.env.ARBITRUM_SEPOLIA_RPC ?? "",
-      ethNetwork: "sepolia",
-      zksync: true,
-      kmsKeyId: devKmsKey,
-    },
-    arbitrumOne: {
-      url: process.env.ARBITRUM_RPC ?? "",
-      ethNetwork: "sepolia",
-      zksync: false,
+      verifyURL:
+        "https://rpc-explorer-verify.topaz.treasure.lol/contract_verification",
       kmsKeyId: devKmsKey,
     },
     treasureMainnet: {
-      url: `${process.env.TREASURE_MAINNET_RPC}`,
-      kmsKeyId: prodKmsKey,
-      ethNetwork: 'mainnet',
+      url: "https://rpc.treasure.lol",
+      ethNetwork: "mainnet",
       chainId: 0xeeee,
+      zksync: true,
       live: true,
       saveDeployments: true,
       gasMultiplier: 2,
-      verifyURL: 'https://rpc-explorer-verify.treasure.lol/contract_verification',
-      zksync: true,
-  },
+      verifyURL:
+        "https://rpc-explorer-verify.treasure.lol/contract_verification",
+      kmsKeyId: prodKmsKey,
+    },
+    arbitrumSepolia: {
+      url: process.env.ARBITRUM_SEPOLIA_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc",
+      ethNetwork: "sepolia",
+      kmsKeyId: devKmsKey,
+    },
+    arbitrumOne: {
+      url: process.env.ARBITRUM_RPC ?? "https://arb1.arbitrum.io/rpc",
+      ethNetwork: "mainnet",
+      live: true,
+      saveDeployments: true,
+      kmsKeyId: prodKmsKey,
+    },
     dockerizedNode: {
       url: "http://localhost:3050",
       ethNetwork: "http://localhost:8545",
-      zksync: true,
     },
     inMemoryNode: {
       url: "http://127.0.0.1:8011",
