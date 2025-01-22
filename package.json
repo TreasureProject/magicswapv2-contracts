@@ -13,7 +13,7 @@
     "clean": "hardhat clean",
     "test:hardhat": "hardhat test --network hardhat",
     "test:forge": "forge test",
-    "style:solidity": "forge fmt"
+    "style:solidity": "forge fmt --zksync"
   },
   "keywords": [],
   "author": "",
