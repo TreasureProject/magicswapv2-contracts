@@ -35,11 +35,20 @@ const config: HardhatUserConfig = {
         "https://rpc-explorer-verify.treasure.lol/contract_verification",
       kmsKeyId: prodKmsKey,
     },
+    abstractTestnet: {
+      url: "https://api.testnet.abs.xyz",
+      ethNetwork: "sepolia",
+      chainId: 0x2B74,
+      zksync: true,
+      kmsKeyId: devKmsKey,
+    },
     abstract: {
       url: "https://api.mainnet.abs.xyz",
       ethNetwork: "mainnet",
       chainId: 0xAB5,
       zksync: true,
+      live: true,
+      saveDeployments: true,
       kmsKeyId: prodKmsKey,
     },
     arbitrumSepolia: {
@@ -71,9 +80,18 @@ const config: HardhatUserConfig = {
     apiKey: {
       arbitrumSepolia: process.env.ARBISCAN_API_KEY ?? "",
       arbitrumOne: process.env.ARBISCAN_API_KEY ?? "",
+      abstractTestnet: process.env.ABSCAN_API_KEY ?? "",
       abstract: process.env.ABSCAN_API_KEY ?? "",
     },
     customChains: [
+      {
+        network: "abstractTestnet",
+        chainId: 0x2B74,
+        urls: {
+          apiURL: "https://api-sepolia.abscan.org/api",
+          browserURL: "https://sepolia.abscan.org"
+        }
+      },
       {
         network: "abstract",
         chainId: 0xAB5,

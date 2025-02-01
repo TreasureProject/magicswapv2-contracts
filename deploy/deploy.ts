@@ -19,6 +19,13 @@ const CHAIN_PARAMS = {
     protocolFeeBeneficiary: "0xa65d67513328445b4a4d2f498624483c2601dda4",
     wethAddress: "0x263d8f36bb8d0d9526255e205868c26690b04b88",
   },
+  // Abstract Testnet
+  11124: {
+    lpFee: DEFAULT_LP_FEE,
+    protocolFee: DEFAULT_PROTOCOL_FEE,
+    protocolFeeBeneficiary: "0x5a25839b49eec2d4c173b42668a84f5988599929",
+    wethAddress: "0xe642f7d1f07af75ed8198f0b4d68f14244baaab5",
+  },
   // Abstract
   2741: {
     lpFee: DEFAULT_LP_FEE,

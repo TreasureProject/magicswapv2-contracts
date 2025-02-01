@@ -6,6 +6,7 @@
   "scripts": {
     "deploy:treasure-topaz": "hardhat deploy-zksync --network treasureTopaz",
     "deploy:treasure-mainnet": "hardhat deploy-zksync --network treasureMainnet",
+    "deploy:abstract-testnet": "hardhat deploy-zksync --network abstractTestnet",
     "deploy:abstract": "hardhat deploy-zksync --network abstract",
     "deploy:arbitrum-sepolia": "hardhat deploy --network arbitrumSepolia",
     "deploy:arbitrum-one": "hardhat deploy --network arbitrumOne",
