@@ -6,6 +6,7 @@
   "scripts": {
     "deploy:treasure-topaz": "hardhat deploy-zksync --network treasureTopaz",
     "deploy:treasure-mainnet": "hardhat deploy-zksync --network treasureMainnet",
+    "deploy:abstract": "hardhat deploy-zksync --network abstract",
     "deploy:arbitrum-sepolia": "hardhat deploy --network arbitrumSepolia",
     "deploy:arbitrum-one": "hardhat deploy --network arbitrumOne",
     "compile": "hardhat compile",
@@ -20,7 +21,7 @@
   "license": "ISC",
   "dependencies": {
     "@matterlabs/hardhat-zksync": "^1.1.0",
-    "@matterlabs/hardhat-zksync-verify": "^1.6.0",
+    "@matterlabs/hardhat-zksync-verify": "^1.7.1",
     "@matterlabs/zksync-contracts": "^0.6.1",
     "@nomicfoundation/hardhat-foundry": "^1.1.2",
     "@nomicfoundation/hardhat-verify": "^2.0.9",

@@ -141,7 +141,6 @@ build
 
 # misc
 .DS_Store
-.env*
 
 .idea
 .vscode
