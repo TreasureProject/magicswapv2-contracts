@@ -14,7 +14,7 @@
     "compile:forge": "forge build",
     "clean": "hardhat clean",
     "test:hardhat": "hardhat test --network hardhat",
-    "test:forge": "forge test",
+    "test:forge": "forge test --zksync",
     "style:solidity": "forge fmt --zksync"
   },
   "keywords": [],
